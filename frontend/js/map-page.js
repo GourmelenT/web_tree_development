@@ -58,27 +58,55 @@ function isValidWgs84(lat, lon) {
   return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
-function mercatorToWgs84(x, y) {
+function lambertCc49ToWgs84(x, y) {
   if (!Number.isFinite(x) || !Number.isFinite(y)) {
     return null;
   }
 
-  // Valid WebMercator bounds in meters
-  if (Math.abs(x) > 20037508.34 || Math.abs(y) > 20037508.34) {
+  const a = 6378137;
+  const e = Math.sqrt(0.00669438002290);
+  const toRad = (degrees) => (degrees * Math.PI) / 180;
+  const toDeg = (radians) => (radians * 180) / Math.PI;
+  const latitudeOfOrigin = toRad(49);
+  const centralMeridian = toRad(3);
+  const firstStandardParallel = toRad(48.25);
+  const secondStandardParallel = toRad(49.75);
+  const falseEasting = 1700000;
+  const falseNorthing = 8200000;
+
+  const m = (phi) => Math.cos(phi) / Math.sqrt(1 - e * e * Math.sin(phi) ** 2);
+  const t = (phi) => {
+    const sinPhi = Math.sin(phi);
+    return Math.tan(Math.PI / 4 - phi / 2) / (((1 - e * sinPhi) / (1 + e * sinPhi)) ** (e / 2));
+  };
+
+  const n =
+    (Math.log(m(firstStandardParallel)) - Math.log(m(secondStandardParallel))) /
+    (Math.log(t(firstStandardParallel)) - Math.log(t(secondStandardParallel)));
+  const f = m(firstStandardParallel) / (n * t(firstStandardParallel) ** n);
+  const rho0 = a * f * t(latitudeOfOrigin) ** n;
+  const dx = x - falseEasting;
+  const dy = rho0 - (y - falseNorthing);
+  const rho = Math.sign(n) * Math.sqrt(dx * dx + dy * dy);
+  const theta = Math.atan2(dx, dy);
+  const projectedT = (rho / (a * f)) ** (1 / n);
+
+  let lat = Math.PI / 2 - 2 * Math.atan(projectedT);
+  for (let i = 0; i < 8; i += 1) {
+    const sinLat = Math.sin(lat);
+    lat =
+      Math.PI / 2 -
+      2 * Math.atan(projectedT * (((1 - e * sinLat) / (1 + e * sinLat)) ** (e / 2)));
+  }
+
+  const lon = centralMeridian + theta / n;
+  const point = { lat: toDeg(lat), lon: toDeg(lon) };
+
+  if (!isValidWgs84(point.lat, point.lon)) {
     return null;
   }
 
-  const lon = (x / 20037508.34) * 180;
-  let lat = (y / 20037508.34) * 180;
-  lat =
-    (180 / Math.PI) *
-    (2 * Math.atan(Math.exp((lat * Math.PI) / 180)) - Math.PI / 2);
-
-  if (!isValidWgs84(lat, lon)) {
-    return null;
-  }
-
-  return { lat, lon };
+  return point;
 }
 
 function normalizeGeoPoint(row) {
@@ -93,8 +121,8 @@ function normalizeGeoPoint(row) {
     return { lat: rawLon, lon: rawLat };
   }
 
-  // Common case with projected meters in DB: longitude=x and latitude=y
-  const converted = mercatorToWgs84(rawLon, rawLat);
+  // Saint-Quentin open data uses RGF93 / CC49 projected meters: longitude=x and latitude=y.
+  const converted = lambertCc49ToWgs84(rawLon, rawLat);
   if (converted) {
     return converted;
   }

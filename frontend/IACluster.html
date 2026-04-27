@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Predictions - ArborData</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="css/base.css" rel="stylesheet" />
+    <link href="css/IACluster.css" rel="stylesheet" />
+    <script defer src="js/mobile-nav.js"></script>
+</head>
+
+<body class="cluster-page-shell">
+    <!-- TopNavBar -->
+    <header class="cluster-topbar site-nav-shell">
+        <div class="cluster-topbar-group site-nav-row">
+            <h1 class="cluster-brand-title">ArborData</h1>
+            <button class="site-nav-toggle material-symbols-outlined" aria-label="Ouvrir le menu" aria-expanded="false" type="button">menu</button>
+            <nav class="cluster-main-nav site-nav-panel">
+                <a class="cluster-nav-link" href="index.html">Dashboard</a>
+                <a class="cluster-nav-link" href="map.html">Map</a>
+                <a class="cluster-nav-link" href="add.html">Add Tree</a>
+                <a class="cluster-nav-link-active" href="IACluster.html">IA Clusters</a>
+                <a class="cluster-nav-link" href="IARisque.html">IA Risque</a>
+            </nav>
+        </div>
+        <div class="cluster-topbar-group-02">
+            <span class="material-symbols-outlined cluster-icon" data-icon="notifications">notifications</span>
+            <span class="material-symbols-outlined cluster-icon" data-icon="account_circle">account_circle</span>
+        </div>
+    </header>
+    <div class="cluster-map-layer">
+        <!-- SideNavBar / Parameters Sidebar -->
+        <aside class="cluster-sidebar">
+            <div class="cluster-sidebar-group">
+                <h2 class="cluster-section-title">Clustering Parameters</h2>
+                <p class="cluster-copy-text">Configure AI spatial analysis engine</p>
+            </div>
+            <div class="cluster-sidebar-group-02">
+                <!-- Algorithm Selection -->
+                <div class="cluster-sidebar-group-03">
+                    <label class="cluster-field-label">Algorithm Logic</label>
+                    <div class="cluster-sidebar-group-04">
+                        <div class="cluster-sidebar-item">
+                            <div class="cluster-sidebar-group-05">
+                                <span class="material-symbols-outlined" data-icon="hub">hub</span>
+                                <span>K-Means Clustering</span>
+                            </div>
+                            <span class="material-symbols-outlined cluster-icon-02"
+                                data-icon="check_circle">check_circle</span>
+                        </div>
+                        <div class="cluster-sidebar-item-02">
+                            <div class="cluster-sidebar-group-05">
+                                <span class="material-symbols-outlined" data-icon="scatter_plot">scatter_plot</span>
+                                <span>DBSCAN Analysis</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Parameters Grid -->
+                <div class="cluster-sidebar-group-06">
+                    <div class="cluster-sidebar-group-07">
+                        <label class="cluster-field-label-02">Number of Clusters (K)</label>
+                        <input class="cluster-field-input" max="12" min="2" type="range" value="6" />
+                        <div class="cluster-sidebar-group-08">
+                            <span>2</span>
+                            <span class="cluster-label-6-clusters-selected">6 Clusters Selected</span>
+                            <span>12</span>
+                        </div>
+                    </div>
+                    <div class="cluster-sidebar-group-07">
+                        <label class="cluster-field-label-02">Spatial Threshold (m)</label>
+                        <input class="cluster-field-input-02" type="number" value="250" />
+                    </div>
+                </div>
+                <!-- Filter Toggles -->
+                <div class="cluster-sidebar-group-03">
+                    <label class="cluster-field-label">Data Filters</label>
+                    <div class="cluster-sidebar-group-09">
+                        <div class="cluster-sidebar-group-10">
+                            <span class="material-symbols-outlined cluster-icon-03"
+                                data-icon="psychiatry">psychiatry</span>
+                            <span class="cluster-label-include-health-metrics">Include Health Metrics</span>
+                        </div>
+                        <div class="cluster-sidebar-group-10">
+                            <span class="material-symbols-outlined cluster-icon-03"
+                                data-icon="calendar_today">calendar_today</span>
+                            <span class="cluster-label-include-health-metrics">Growth History (3Y)</span>
+                        </div>
+                        <div class="cluster-sidebar-group-10">
+                            <span class="material-symbols-outlined cluster-icon-03" data-icon="warning">warning</span>
+                            <span class="cluster-label-include-health-metrics">Risk Sensitivity</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="cluster-sidebar-button">
+                <span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+                Lancer l'analyse de clusters
+            </button>
+        </aside>
+        <!-- Main Content Canvas -->
+        <main class="cluster-main-content">
+            <!-- Map Interface -->
+            <div class="cluster-map-canvas cluster-map-layer-02">
+                <img alt="Detailed topography map" class="cluster-map-image"
+                    data-alt="high detail topographical map of an urban park area with grey and emerald accents and grid overlays"
+                    data-location="Luxembourg City"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGpLHWGaOKDbD_0o2TE8UTuNhLgy6i4eplTHGHEkF48LekOnn8roEYFpZ7rxtyfQCN-dRYFwsvqJvtCRBcv4pB9MKMX3iEqdXTy0moBnsSlxP2KGPBFBuwOA3_aib5BT0jGGNO3XE3djEb4GXBaOL0FpHtO9BdndhyuV4jRgR7WC0DA3InJ_nIMJ2KEZh_SVgtF_k2qrqeWP267JqFVQrKTsqK3C1Y8-6Edn4xJWdlPvvFdHm2RY9j7OhOcUxQ5VMwQwY5nITnidw" />
+                <!-- Simulated Data Points (Cluster 1 - Blue) -->
+                <div class="data-dot cluster-map-layer-03" style="top: 20%; left: 30%;"></div>
+                <div class="data-dot cluster-map-layer-03" style="top: 22%; left: 33%;"></div>
+                <div class="data-dot cluster-map-layer-03" style="top: 18%; left: 35%;"></div>
+                <!-- Simulated Data Points (Cluster 2 - Amber) -->
+                <div class="data-dot cluster-map-layer-04" style="top: 60%; left: 50%;"></div>
+                <div class="data-dot cluster-map-layer-04" style="top: 65%; left: 55%;"></div>
+                <div class="data-dot cluster-map-layer-04" style="top: 62%; left: 52%;"></div>
+                <!-- Simulated Data Points (Cluster 3 - Emerald) -->
+                <div class="data-dot cluster-map-layer-05" style="top: 40%; left: 70%;"></div>
+                <div class="data-dot cluster-map-layer-05" style="top: 45%; left: 75%;"></div>
+                <div class="data-dot cluster-map-layer-05" style="top: 38%; left: 72%;"></div>
+                <!-- Floating Legend -->
+                <div class="cluster-map-overlay">
+                    <h4 class="cluster-card-title">
+                        <span class="material-symbols-outlined cluster-icon-04"
+                            data-icon="legend_toggle">legend_toggle</span>
+                        Cluster Logic
+                    </h4>
+                    <ul class="cluster-sidebar-group-06">
+                        <li class="cluster-list-item">
+                            <div class="cluster-map-layer-06"></div>
+                            <div>
+                                <p class="cluster-copy-text-02">Riparian High Density</p>
+                                <p class="cluster-copy-text-03">Populations aligned with moisture-rich soil zones and
+                                    riverbanks.</p>
+                            </div>
+                        </li>
+                        <li class="cluster-list-item">
+                            <div class="cluster-map-layer-07"></div>
+                            <div>
+                                <p class="cluster-copy-text-02">Upland Oak-Hickory</p>
+                                <p class="cluster-copy-text-03">Ancient heritage species requiring low-intervention
+                                    buffer zones.</p>
+                            </div>
+                        </li>
+                        <li class="cluster-list-item">
+                            <div class="cluster-map-layer-08"></div>
+                            <div>
+                                <p class="cluster-copy-text-02">Regeneration Zones</p>
+                                <p class="cluster-copy-text-03">Active AI monitoring for sapling survival and soil
+                                    nutrient sync.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Search Overlay -->
+                <div class="cluster-map-overlay-02">
+                    <div class="cluster-map-layer-09">
+                        <input class="cluster-field-input-03" placeholder="Search coordinates or tag..." type="text" />
+                        <span class="material-symbols-outlined cluster-positioned-icon" data-icon="search">search</span>
+                    </div>
+                    <div class="cluster-map-layer-10">
+                        <span class="material-symbols-outlined" data-icon="layers">layers</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Bottom Analytics Bar -->
+            <div class="cluster-map-layer-11">
+                <div class="cluster-map-layer-12">
+                    <div class="cluster-map-layer-13">
+                        <span class="material-symbols-outlined cluster-icon-04" data-icon="forest">forest</span>
+                    </div>
+                    <div>
+                        <p class="cluster-field-label">Tree Sample Size</p>
+                        <p class="cluster-copy-text-04">12,482</p>
+                    </div>
+                </div>
+                <div class="cluster-map-layer-12">
+                    <div class="cluster-map-layer-14">
+                        <span class="material-symbols-outlined cluster-icon-05" data-icon="analytics">analytics</span>
+                    </div>
+                    <div>
+                        <p class="cluster-field-label">Cluster Purity Index</p>
+                        <p class="cluster-copy-text-04">94.2%</p>
+                    </div>
+                </div>
+                <div class="cluster-map-layer-12">
+                    <div class="cluster-map-layer-15">
+                        <span class="material-symbols-outlined cluster-icon-06"
+                            data-icon="auto_awesome">auto_awesome</span>
+                    </div>
+                    <div>
+                        <p class="cluster-field-label">AI Prediction Confidence</p>
+                        <p class="cluster-copy-text-04">High</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Footer -->
+    <footer class="cluster-footer">
+        <div class="cluster-sidebar-group-04">
+            <span class="cluster-label-arbordata">ArborData</span>
+            <p class="cluster-footer-text">© 2024 ArborData. Digital Forestry &amp; Heritage Management.</p>
+        </div>
+        <div class="cluster-footer-group">
+            <a class="cluster-footer-link" href="#">Privacy Policy</a>
+            <a class="cluster-footer-link" href="#">Data Governance</a>
+            <a class="cluster-footer-link" href="#">Sensor API</a>
+            <a class="cluster-footer-link" href="#">Documentation</a>
+        </div>
+    </footer>
+</body>
+
+</html>

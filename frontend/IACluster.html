@@ -9,39 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <style>
-        .cluster-page { display: grid; gap: 16px; padding: 16px; }
-        .cluster-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-        .cluster-card { padding: 12px; border-radius: 6px; color: white; font-weight: 600; text-align: center; }
-        .cluster-petit { background-color: #2f8f4e; }
-        .cluster-moyen { background-color: #ff9800; }
-        .cluster-grand { background-color: #d32f2f; }
-        .cluster-map { width: 100%; height: 500px; border: 1px solid #ccc; border-radius: 6px; }
-        .cluster-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        .cluster-table th, .cluster-table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        .cluster-table th { background-color: #f5f5f5; font-weight: 600; }
-        #loading { text-align: center; padding: 20px; }
-        .btn-back { background-color: #1e6f3a; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-back:hover { background-color: #165a2f; }
-    </style>
 </head>
 
 <body>
     <div class="site-shell">
         <header class="topbar">
-            <div class="brand">arborData saint-quentin</div>
+            <div class="brand">ArborData Saint-Quentin</div>
             <nav class="nav">
-                <a href="index.html">accueil</a>
-                <a href="add.html">ajouter un arbre</a>
-                <a href="map.html">visualisation</a>
-                <a class="active" href="IACluster.html">clusters IA</a>
+                <a href="index.html">Accueil</a>
+                <a href="add.html">Ajouter un arbre</a>
+                <a href="map.html">Visualisation</a>
+                <a class="active" href="IACluster.html">Clusters IA</a>
+                <a href="IARisque.html">Age/Risque IA</a>
             </nav>
         </header>
         <main class="cluster-page">
             <section class="panel">
                 <h1 class="page-title">Prédiction des Clusters IA</h1>
                 <p class="page-subtitle">Classification K-Means des arbres par taille (Petit/Moyen/Grand)</p>
-                <a class="btn-back" href="map.html">← Retour à la visualisation</a>
+                <a class="btn btn-primary back-link" href="map.html">Retour a la visualisation</a>
             </section>
 
             <section class="panel cluster-info" id="cluster-stats">

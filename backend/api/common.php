@@ -27,6 +27,25 @@ function normalizeText(string $value, string $default = 'inconnu'): string
     return $trimmed === '' ? $default : $trimmed;
 }
 
+function normalizeUpperNoAccent(string $value, string $default = 'INCONNU'): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return $default;
+    }
+
+    $withoutAccents = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $trimmed);
+    if ($withoutAccents === false || $withoutAccents === null) {
+        $withoutAccents = $trimmed;
+    }
+
+    $withoutAccents = preg_replace('/[^A-Za-z0-9\s\-\']/u', '', $withoutAccents) ?? $withoutAccents;
+    $collapsed = preg_replace('/\s+/', ' ', $withoutAccents) ?? $withoutAccents;
+    $upper = strtoupper(trim($collapsed));
+
+    return $upper === '' ? $default : $upper;
+}
+
 function parseBody(): array
 {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -158,7 +177,7 @@ function getOrCreateLocalisation(PDO $pdo, string $quartier, string $secteur, fl
 
 function getOrCreateEspece(PDO $pdo, string $nomLatin, int $feuillageId): int
 {
-    $nomLatin = normalizeText($nomLatin);
+    $nomLatin = normalizeUpperNoAccent($nomLatin, 'INCONNU');
 
     $existingId = firstColumnId(
         $pdo,

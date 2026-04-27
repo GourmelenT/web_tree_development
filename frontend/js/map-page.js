@@ -46,7 +46,7 @@ async function fetchApiJson(endpoint, init = {}) {
     }
   }
 
-  throw lastError || new Error('api introuvable');
+  throw lastError || new Error('API introuvable');
 }
 
 function safeNumber(value, fallback = 0) {
@@ -164,7 +164,7 @@ function renderTableRows(rows) {
       <td>${safeNumber(arbre.hauteur_totale).toFixed(1)}</td>
       <td>${safeNumber(arbre.hauteur_tronc).toFixed(1)}</td>
       <td>${safeNumber(arbre.diametre_tronc).toFixed(1)}</td>
-      <td>${safeNumber(arbre.remarquable) ? 'oui' : 'non'}</td>
+      <td>${safeNumber(arbre.remarquable) ? 'Oui' : 'Non'}</td>
       <td>${safeNumber(arbre.latitude).toFixed(5)}</td>
       <td>${safeNumber(arbre.longitude).toFixed(5)}</td>
       <td>${arbre.etat}</td>
@@ -183,7 +183,7 @@ function renderPlotlyMap(rows) {
 
   if (typeof Plotly === 'undefined') {
     if (mapStatus) {
-      mapStatus.textContent = 'erreur: librairie carte indisponible (Plotly non charge)';
+      mapStatus.textContent = 'Erreur : librairie carte indisponible (Plotly non charge)';
     }
     return;
   }
@@ -210,7 +210,7 @@ function renderPlotlyMap(rows) {
     lon: sampledRows.map((r) => Number(r._lon)),
     lat: sampledRows.map((r) => Number(r._lat)),
     text: sampledRows.map(
-      (r) => `${r.espece}<br>quartier: ${r.quartier}<br>etat: ${r.etat}<br>h totale: ${safeNumber(r.hauteur_totale).toFixed(1)} m`
+      (r) => `${r.espece}<br>Quartier : ${r.quartier}<br>Etat : ${r.etat}<br>H totale : ${safeNumber(r.hauteur_totale).toFixed(1)} m`
     ),
     hovertemplate: '%{text}<extra></extra>',
     marker: {
@@ -230,20 +230,24 @@ function renderPlotlyMap(rows) {
   };
 
   try {
-    Plotly.react(container, [trace], layout, { responsive: true, displayModeBar: false });
+    Plotly.react(container, [trace], layout, {
+      responsive: true,
+      displayModeBar: true,
+      scrollZoom: true,
+    });
 
     if (mapStatus) {
       if (!normalizedRows.length) {
-        mapStatus.textContent = 'carte chargee (aucune coordonnee exploitable)';
+        mapStatus.textContent = 'Carte chargee (aucune coordonnee exploitable)';
       } else if (normalizedRows.length !== rows.length) {
-        mapStatus.textContent = `carte chargee (${normalizedRows.length}/${rows.length} coordonnees valides)`;
+        mapStatus.textContent = `Carte chargee (${normalizedRows.length}/${rows.length} coordonnees valides)`;
       } else if (sampledRows.length !== normalizedRows.length) {
-        mapStatus.textContent = `carte chargee (${sampledRows.length} points affiches sur ${normalizedRows.length})`;
+        mapStatus.textContent = `Carte chargee (${sampledRows.length} points affiches sur ${normalizedRows.length})`;
       }
     }
   } catch (error) {
     if (mapStatus) {
-      mapStatus.textContent = `erreur rendu carte: ${error.message}`;
+      mapStatus.textContent = `Erreur rendu carte : ${error.message}`;
     }
   }
 }
@@ -260,13 +264,13 @@ function applyFilters() {
 
   renderTableRows(filtered);
   renderPlotlyMap(filtered);
-  if (tableCount) tableCount.textContent = `${filtered.length} arbres affiches / ${allRows.length}`;
+  if (tableCount) tableCount.textContent = `${filtered.length} Arbres affiches / ${allRows.length}`;
 }
 
 function fillEtatFilter(rows) {
   if (!etatSelect) return;
   const etats = Array.from(new Set(rows.map((r) => String(r.etat || '').trim()).filter(Boolean))).sort();
-  etatSelect.innerHTML = '<option value="">tous les etats</option>';
+  etatSelect.innerHTML = '<option value="">Tous les etats</option>';
   etats.forEach((etat) => {
     const option = document.createElement('option');
     option.value = etat;
@@ -276,20 +280,20 @@ function fillEtatFilter(rows) {
 }
 
 async function loadArbres() {
-  if (mapStatus) mapStatus.textContent = 'chargement des donnees...';
+  if (mapStatus) mapStatus.textContent = 'Chargement des donnees...';
 
   try {
     const { response, payload } = await fetchApiJson('arbres.php');
 
     if (!response.ok || !payload.success) {
-      throw new Error(payload.message || 'erreur api arbres');
+      throw new Error(payload.message || 'Erreur API arbres');
     }
 
     allRows = Array.isArray(payload.data) ? payload.data : [];
     fillEtatFilter(allRows);
     applyFilters();
   } catch (error) {
-    if (mapStatus) mapStatus.textContent = `erreur: ${error.message}`;
+    if (mapStatus) mapStatus.textContent = `Erreur : ${error.message}`;
   }
 }
 

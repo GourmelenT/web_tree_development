@@ -12,54 +12,56 @@
 <body>
   <div class="site-shell">
     <header class="topbar">
-      <div class="brand">arborData saint-quentin</div>
+      <div class="brand">ArborData Saint-Quentin</div>
       <nav class="nav">
-        <a class="active" href="index.html">accueil</a>
-        <a href="add.html">ajouter un arbre</a>
-        <a href="map.html">visualisation</a>
+        <a class="active" href="index.html">Accueil</a>
+        <a href="add.html">Ajouter un arbre</a>
+        <a href="map.html">Visualisation</a>
+        <a href="IACluster.html">Clusters IA</a>
+        <a href="IARisque.html">Age/Risque IA</a>
       </nav>
     </header>
 
-    <main class="grid" style="margin-top: 16px;">
+    <main class="grid page-main">
       <section class="hero">
-        <img src="https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80" alt="arbres en ville" />
-        <article class="panel" style="display:grid; gap: 12px;">
-          <h1 class="page-title" style="margin:0;">patrimoine arbore de saint-quentin</h1>
-          <p class="page-subtitle">application web de gestion et visualisation des arbres (alignement, parcs, squares) avec donnees nettoyees, api php et base mysql.</p>
-          <p class="page-subtitle">objectif du projet: combiner big data, ia et web pour explorer, enrichir et exploiter le patrimoine arbore de la ville.</p>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn btn-primary" href="map.html">voir la carte et le tableau</a>
-            <a class="btn btn-soft" href="add.html">ajouter un arbre</a>
+        <img src="https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80" alt="Arbres en ville" />
+        <article class="panel panel-stack">
+          <h1 class="page-title section-title">Patrimoine arbore de Saint-Quentin</h1>
+          <p class="page-subtitle">Application web de gestion et visualisation des arbres (alignement, parcs, squares) avec donnees nettoyees, API PHP et base MySQL.</p>
+          <p class="page-subtitle">Objectif du projet : combiner Big Data, IA et Web pour explorer, enrichir et exploiter le patrimoine arbore de la ville.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="map.html">Voir la carte et le tableau</a>
+            <a class="btn btn-soft" href="add.html">Ajouter un arbre</a>
           </div>
         </article>
       </section>
 
-      <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+      <section class="toolbar-grid">
         <article class="panel kpi">
-          <span>nombre total d'arbres</span>
+          <span>Nombre total d'arbres</span>
           <span class="value" id="kpi-total">...</span>
         </article>
         <article class="panel kpi">
-          <span>arbres remarquables</span>
+          <span>Arbres remarquables</span>
           <span class="value" id="kpi-remarkables">...</span>
         </article>
         <article class="panel kpi">
-          <span>nombre d'etats differents</span>
+          <span>Nombre d'etats differents</span>
           <span class="value" id="kpi-states">...</span>
         </article>
         <article class="panel kpi">
-          <span>hauteur moyenne (m)</span>
+          <span>Hauteur moyenne (m)</span>
           <span class="value" id="kpi-height">...</span>
         </article>
       </section>
 
       <section class="panel">
-        <h2 style="margin-top:0;">fonctionnalites implementees</h2>
+        <h2 class="section-title">Fonctionnalites implementees</h2>
         <ul>
-          <li>page d'accueil avec descriptif du projet, menu et indicateurs dynamiques.</li>
-          <li>formulaire d'ajout complet pour creer un nouvel arbre sans age ni deracinement.</li>
-          <li>visualisation des arbres dans un tableau et sur une carte interactive plotly.</li>
-          <li>routes client-serveur php pour lister, creer et charger les options de reference.</li>
+          <li>Page d'accueil avec descriptif du projet, menu et indicateurs dynamiques.</li>
+          <li>Formulaire d'ajout complet pour creer un nouvel arbre sans age ni deracinement.</li>
+          <li>Visualisation des arbres dans un tableau et sur une carte interactive Plotly.</li>
+          <li>Routes client-serveur PHP pour lister, creer et charger les options de reference.</li>
         </ul>
       </section>
     </main>

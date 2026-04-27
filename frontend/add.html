@@ -12,99 +12,133 @@
 <body>
   <div class="site-shell">
     <header class="topbar">
-      <div class="brand">arborData saint-quentin</div>
+      <div class="brand">ArborData Saint-Quentin</div>
       <nav class="nav">
-        <a href="index.html">accueil</a>
-        <a class="active" href="add.html">ajouter un arbre</a>
-        <a href="map.html">visualisation</a>
+        <a href="index.html">Accueil</a>
+        <a class="active" href="add.html">Ajouter un arbre</a>
+        <a href="map.html">Visualisation</a>
+        <a href="IACluster.html">Clusters IA</a>
+        <a href="IARisque.html">Age/Risque IA</a>
       </nav>
     </header>
 
-    <main>
-      <h1 class="page-title">ajout d'un nouvel arbre</h1>
-      <p class="page-subtitle">formulaire connecte a l'api. les champs age et deracinement ne sont pas demandes.</p>
+    <main class="page-main">
+      <h1 class="page-title">Ajout d'un nouvel arbre</h1>
+      <p class="page-subtitle">Formulaire connecte a l'API. Les champs age et deracinement ne sont pas demandes.</p>
 
       <form class="panel add-tree-form" style="margin-top:16px; display:grid; gap:14px;">
-        <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
-          <div class="field">
-            <label for="species">espece</label>
-            <select id="species" required>
-              <option value="">selectionner une espece</option>
-            </select>
+        <div class="form-stepper" aria-label="Progression du formulaire">
+          <div class="step-pill is-active" data-step-pill="1"><span>1</span> Profil</div>
+          <div class="step-pill" data-step-pill="2"><span>2</span> Mesures</div>
+          <div class="step-pill" data-step-pill="3"><span>3</span> Localisation</div>
+          <div class="step-pill" data-step-pill="4"><span>4</span> Validation</div>
+        </div>
+
+        <section class="form-step is-active" data-step="1">
+          <h2 class="step-title">Profil de l'arbre</h2>
+          <p class="step-subtitle">Renseignez les informations botaniques et d'etat.</p>
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="species">Espece</label>
+              <input id="species" type="text" list="species-list" placeholder="Ex: AME..." autocomplete="off" required />
+              <datalist id="species-list"></datalist>
+              <div id="species-suggestions" class="species-suggestions" aria-live="polite"></div>
+            </div>
+            <div class="field">
+              <label for="type">Type / feuillage</label>
+              <select id="type" required>
+                <option value="">Selectionner un type</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="etat">Etat</label>
+              <select id="etat" required>
+                <option value="">Selectionner un etat</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="development_stage">Stade de developpement</label>
+              <select id="development_stage" required>
+                <option value="">Selectionner un stade</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="crown_type">Type de port</label>
+              <select id="crown_type" required>
+                <option value="">Selectionner un port</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="base_type">Type de pied</label>
+              <select id="base_type" required>
+                <option value="">Selectionner un pied</option>
+              </select>
+            </div>
           </div>
-          <div class="field">
-            <label for="type">type / feuillage</label>
-            <select id="type" required>
-              <option value="">selectionner un type</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="etat">etat</label>
-            <select id="etat" required>
-              <option value="">selectionner un etat</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="development_stage">stade de developpement</label>
-            <select id="development_stage" required>
-              <option value="">selectionner un stade</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="crown_type">type de port</label>
-            <select id="crown_type" required>
-              <option value="">selectionner un port</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="base_type">type de pied</label>
-            <select id="base_type" required>
-              <option value="">selectionner un pied</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="total_height">hauteur totale (m)</label>
-            <input id="total_height" type="number" step="0.1" min="0" required />
-          </div>
-          <div class="field">
-            <label for="trunk_height">hauteur tronc (m)</label>
-            <input id="trunk_height" type="number" step="0.1" min="0" required />
-          </div>
-          <div class="field">
-            <label for="diameter">diametre tronc (cm)</label>
-            <input id="diameter" type="number" step="0.1" min="0" required />
-          </div>
-          <div class="field">
-            <label for="latitude">latitude</label>
-            <input id="latitude" type="number" step="0.000001" required />
-          </div>
-          <div class="field">
-            <label for="longitude">longitude</label>
-            <input id="longitude" type="number" step="0.000001" required />
-          </div>
-          <div class="field">
-            <label for="quartier">quartier</label>
-            <input id="quartier" type="text" placeholder="ex: quartier du centre-ville" required />
-          </div>
-          <div class="field">
-            <label for="secteur">secteur</label>
-            <input id="secteur" type="text" placeholder="ex: boulevard richelieu" required />
-          </div>
-          <div class="field">
-            <label for="situation">situation</label>
-            <select id="situation" required>
-              <option value="">selectionner une situation</option>
-            </select>
+          <label class="remarkable-toggle">
+            <input id="remarkable" type="checkbox" /> Arbre remarquable
+          </label>
+        </section>
+
+        <section class="form-step" data-step="2">
+          <h2 class="step-title">Dimensions de l'arbre</h2>
+          <p class="step-subtitle">Ajoutez les mesures principales pour alimenter les predictions IA.</p>
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="total_height">Hauteur totale (m)</label>
+              <input id="total_height" type="number" step="0.1" min="0" required />
+            </div>
+            <div class="field">
+              <label for="trunk_height">Hauteur tronc (m)</label>
+              <input id="trunk_height" type="number" step="0.1" min="0" required />
+            </div>
+            <div class="field">
+              <label for="diameter">Diametre tronc (cm)</label>
+              <input id="diameter" type="number" step="0.1" min="0" required />
+            </div>
           </div>
         </section>
 
-        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
-          <input id="remarkable" type="checkbox" /> arbre remarquable
-        </label>
+        <section class="form-step" data-step="3">
+          <h2 class="step-title">Localisation et contexte</h2>
+          <p class="step-subtitle">Indiquez la position et l'environnement de l'arbre.</p>
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="latitude">Latitude</label>
+              <input id="latitude" type="number" step="0.000001" required />
+            </div>
+            <div class="field">
+              <label for="longitude">Longitude</label>
+              <input id="longitude" type="number" step="0.000001" required />
+            </div>
+            <div class="field">
+              <label for="quartier">Quartier</label>
+              <input id="quartier" type="text" placeholder="Ex: quartier du centre-ville" required />
+            </div>
+            <div class="field">
+              <label for="secteur">Secteur</label>
+              <input id="secteur" type="text" placeholder="Ex: boulevard richelieu" required />
+            </div>
+            <div class="field">
+              <label for="situation">Situation</label>
+              <select id="situation" required>
+                <option value="">Selectionner une situation</option>
+              </select>
+            </div>
+          </div>
+        </section>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn btn-primary" type="submit">enregistrer l'arbre</button>
-          <a class="btn btn-soft" href="map.html">aller a la visualisation</a>
+        <section class="form-step" data-step="4">
+          <h2 class="step-title">Validation</h2>
+          <p class="step-subtitle">Verifiez les informations avant enregistrement.</p>
+          <div class="review-box" id="form-review"></div>
+        </section>
+
+        <div class="form-nav">
+          <button class="btn btn-soft" type="button" id="btn-prev-step">Etape precedente</button>
+          <button class="btn btn-primary" type="button" id="btn-next-step">Etape suivante</button>
+          <button class="btn btn-primary" type="submit" id="btn-submit-form">Enregistrer l'arbre</button>
+          <a class="btn btn-soft" href="map.html">Aller a la visualisation</a>
         </div>
 
         <div id="form-feedback" class="feedback" aria-live="polite"></div>

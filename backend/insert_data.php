@@ -4,6 +4,71 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db_connection.php';
 
+const REFERENCE_LABELS = [
+    'ETAT' => [
+        'ABATTU',
+        'EN PLACE',
+        'ESSOUCHÉ',
+        'NON ESSOUCHÉ',
+        'REMPLACE',
+        'SUPPRIMÉ',
+    ],
+    'STADE_DEV' => [
+        'ADULTE',
+        'JEUNE',
+        'SENESCENT',
+        'VIEUX',
+    ],
+    'PORT' => [
+        'ARCHITECTURE',
+        'CÉPÉE',
+        'COURONNÉ',
+        'ÉTÊTÉ',
+        'LIBRE',
+        'RÉDUIT',
+        'RÉDUIT RELÂCHÉ',
+        'RIDEAU',
+        'SEMI LIBRE',
+        'TÊTARD',
+        'TÊTARD RELÂCHÉ',
+        'TETE DE CHAT',
+        'TÊTE DE CHAT RELACHÉ',
+    ],
+    'PIED' => [
+        'BAC DE PLANTATION',
+        'BANDE DE TERRE',
+        'FOSSE ARBRE',
+        'GAZON',
+        'REVÊTEMENT NON PERMÉABLE',
+        'TERRE',
+        'TOILE TISSÉE',
+        'VÉGÉTATION',
+    ],
+    'SITUATION' => [
+        'ALIGNEMENT',
+        'GROUPE',
+        'ISOLÉ',
+    ],
+];
+
+function upperNoAccent(string $value): string
+{
+    $trimmed = trim($value);
+    if ($trimmed === '') {
+        return '';
+    }
+
+    $withoutAccents = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $trimmed);
+    if ($withoutAccents === false || $withoutAccents === null) {
+        $withoutAccents = $trimmed;
+    }
+
+    $withoutAccents = preg_replace('/[^A-Za-z0-9\s\-\']/u', '', $withoutAccents) ?? $withoutAccents;
+    $collapsed = preg_replace('/\s+/', ' ', $withoutAccents) ?? $withoutAccents;
+
+    return strtoupper(trim($collapsed));
+}
+
 function cleanText(?string $value, string $default = 'inconnu'): string
 {
     if ($value === null) {
@@ -16,6 +81,20 @@ function cleanText(?string $value, string $default = 'inconnu'): string
     }
 
     return $trimmed;
+}
+
+function cleanLabel(?string $value, string $default = 'INCONNU'): string
+{
+    if ($value === null) {
+        return $default;
+    }
+
+    $cleaned = upperNoAccent($value);
+    if ($cleaned === '' || $cleaned === 'NA') {
+        return $default;
+    }
+
+    return $cleaned;
 }
 
 function toFloatOrZero(?string $value): float
@@ -90,6 +169,35 @@ function resetTables(PDO $pdo): void
     $pdo->exec('DELETE FROM SITUATION');
 }
 
+function seedReferenceLabels(PDO $pdo): void
+{
+    foreach (REFERENCE_LABELS as $table => $labels) {
+        $stmt = $pdo->prepare("INSERT INTO {$table} (libelle) VALUES (:libelle)");
+        foreach ($labels as $label) {
+            $stmt->execute([':libelle' => $label]);
+        }
+    }
+}
+
+function pickReferenceLabel(string $table, ?string $rawValue): string
+{
+    $allowed = REFERENCE_LABELS[$table] ?? [];
+    if ($allowed === []) {
+        return cleanLabel($rawValue, 'INCONNU');
+    }
+
+    $candidate = cleanLabel($rawValue, '');
+    if ($candidate !== '') {
+        foreach ($allowed as $label) {
+            if (upperNoAccent($label) === $candidate) {
+                return $label;
+            }
+        }
+    }
+
+    return $allowed[array_rand($allowed)];
+}
+
 function pickRandomRowsFromCsv($handle, int $limit): array
 {
     $rows = [];
@@ -122,6 +230,7 @@ function insertCsvData(string $csvPath): void
         // debut transac
         $pdo->beginTransaction();
         resetTables($pdo);
+        seedReferenceLabels($pdo);
 
         $header = fgetcsv($handle, 0, ',', '"', '\\');
         if ($header === false) {
@@ -179,13 +288,13 @@ function insertCsvData(string $csvPath): void
             $longitude = toFloatOrZero($row[$indexByName['X']] ?? null);
             $latitude = toFloatOrZero($row[$indexByName['Y']] ?? null);
 
-            $feuillageLib = cleanText($row[$indexByName['feuillage']] ?? null);
-            $nomLatin = cleanText($row[$indexByName['nomlatin']] ?? null);
-            $etatLib = cleanText($row[$indexByName['fk_arb_etat']] ?? null);
-            $stadeLib = cleanText($row[$indexByName['fk_stadedev']] ?? null);
-            $portLib = cleanText($row[$indexByName['fk_port']] ?? null);
-            $piedLib = cleanText($row[$indexByName['fk_pied']] ?? null);
-            $situationLib = cleanText($row[$indexByName['fk_situation']] ?? null);
+            $feuillageLib = cleanLabel($row[$indexByName['feuillage']] ?? null, 'INCONNU');
+            $nomLatin = cleanLabel($row[$indexByName['nomlatin']] ?? null, 'INCONNU');
+            $etatLib = pickReferenceLabel('ETAT', $row[$indexByName['fk_arb_etat']] ?? null);
+            $stadeLib = pickReferenceLabel('STADE_DEV', $row[$indexByName['fk_stadedev']] ?? null);
+            $portLib = pickReferenceLabel('PORT', $row[$indexByName['fk_port']] ?? null);
+            $piedLib = pickReferenceLabel('PIED', $row[$indexByName['fk_pied']] ?? null);
+            $situationLib = pickReferenceLabel('SITUATION', $row[$indexByName['fk_situation']] ?? null);
 
             $dateEdited = toSqlDate($row[$indexByName['last_edited_date']] ?? null);
             $datePlantation = toSqlDate($row[$indexByName['dte_plantation']] ?? null);

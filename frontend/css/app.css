@@ -55,6 +55,7 @@ a {
   font-weight: 700;
   font-size: 1.15rem;
   letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 .nav {
@@ -68,6 +69,7 @@ a {
   border-radius: 10px;
   color: var(--muted);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .nav a.active,
@@ -80,6 +82,7 @@ a {
   margin: 22px 0 8px;
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   font-size: 2rem;
+  line-height: 1.2;
 }
 
 .page-subtitle {
@@ -92,6 +95,198 @@ a {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 16px;
+}
+
+.page-main {
+  margin-top: 16px;
+}
+
+.panel-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.add-tree-form .form-step[data-step="1"] .toolbar-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  align-items: start;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  grid-column: 1 / -1;
+}
+
+.toolbar-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  min-height: 42px;
+}
+
+.section-title {
+  margin-top: 0;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cluster-page,
+.risk-page {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.risk-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.risk-hero {
+  text-align: center;
+}
+
+.risk-hero .back-link {
+  margin: 8px auto 0;
+}
+
+.cluster-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.cluster-card {
+  padding: 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cluster-petit {
+  background-color: #2f8f4e;
+}
+
+.cluster-moyen {
+  background-color: #ff9800;
+}
+
+.cluster-grand {
+  background-color: #d32f2f;
+}
+
+.cluster-map {
+  width: 100%;
+  height: 500px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.cluster-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.cluster-table th,
+.cluster-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.cluster-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.tree-selector {
+  display: grid;
+  gap: 12px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.tree-selector .btn {
+  min-height: 44px;
+}
+
+.prediction-results {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+.prediction-card {
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f9faf9;
+  box-shadow: 0 6px 14px rgba(19, 33, 22, 0.06);
+}
+
+.prediction-card h3 {
+  margin-top: 0;
+}
+
+.prediction-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e6f3a;
+  margin: 8px 0;
+}
+
+.confidence {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+}
+
+.risk-high {
+  color: #d32f2f;
+}
+
+.risk-low {
+  color: #2f8f4e;
+}
+
+.risk-medium {
+  color: #ff9800;
+}
+
+.card-full {
+  grid-column: 1 / -1;
+}
+
+#loading {
+  text-align: center;
+  padding: 20px;
 }
 
 .grid {
@@ -131,6 +326,43 @@ a {
   font-size: 0.95rem;
 }
 
+.species-suggestions {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.species-suggestions.has-items {
+  display: flex;
+}
+
+.species-suggestion-title {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.species-suggestion-item {
+  border: 1px solid #cfe0d1;
+  background: #f4faf5;
+  color: var(--accent-dark);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.species-suggestion-item:hover {
+  background: #e8f4ea;
+}
+
+.species-suggestion-empty {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -156,6 +388,86 @@ a {
   margin-top: 10px;
   min-height: 22px;
   font-weight: 600;
+}
+
+.form-stepper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-weight: 700;
+  color: var(--muted);
+  background: #f7fbf7;
+}
+
+.step-pill span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e3efe5;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+}
+
+.step-pill.is-active {
+  border-color: #b7d6bf;
+  color: var(--accent-dark);
+  background: #eaf6ed;
+}
+
+.form-step {
+  display: none;
+  border: 1px dashed #cde0ce;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fcfffc;
+}
+
+.form-step.is-active {
+  display: grid;
+  gap: 12px;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.step-subtitle {
+  margin: 0;
+  color: var(--muted);
+}
+
+.remarkable-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.form-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.review-box {
+  border: 1px solid #d6e4d8;
+  border-radius: 10px;
+  background: #f8fcf8;
+  padding: 12px;
+  color: var(--text);
 }
 
 .table-wrap {
@@ -198,5 +510,46 @@ th {
   .hero {
     grid-template-columns: 1.2fr 1fr;
     align-items: stretch;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .brand {
+    text-align: center;
+  }
+
+  .nav {
+    justify-content: center;
+  }
+
+  .toolbar-actions .btn {
+    width: 100%;
+  }
+
+  .form-nav .btn {
+    width: 100%;
+  }
+
+  .add-tree-form .form-step[data-step="1"] .toolbar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-results {
+    grid-template-columns: 1fr;
+  }
+
+  .tree-selector {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .add-tree-form .form-step[data-step="1"] .toolbar-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }

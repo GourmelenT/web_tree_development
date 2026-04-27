@@ -3,34 +3,77 @@
  * Charge les prédictions de clusters et affiche une carte Plotly
  */
 
-// Projection Lambert-93 (EPSG:2154) vers WGS84 (EPSG:4326)
+function isValidWgs84(lat, lon) {
+    return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
+// Projection RGF93 / CC49 vers WGS84
 function lambertCc49ToWgs84(x, y) {
-    // Constantes pour la conversion
-    const xs = 700000;
-    const ys = 12655612;
-    const lambda = 3;
-    const phi0 = 52;
-    const c = 11745793.39;
-    const n = 0.7256077650532670;
-    const phi1 = 49;
-    const phi2 = 50.79590927304922;
-
-    const degreeToRad = Math.PI / 180;
-    const radToDegree = 180 / Math.PI;
-
-    const rho = Math.sqrt(Math.pow(x - xs, 2) + Math.pow(y - ys, 2));
-    const gamma = Math.atan2(x - xs, ys - y);
-    const lambda_deg = (gamma / degreeToRad / n) + lambda;
-
-    let phi = 2 * Math.atan(Math.pow(c / rho, 1 / n) * Math.pow(Math.E, 0)) - 90;
-    for (let i = 0; i < 8; i++) {
-        const sinPhi = Math.sin(phi * degreeToRad);
-        const numerator = Math.pow(1 - 0.0072292 * sinPhi * sinPhi, 0.5) * Math.tan(phi * degreeToRad);
-        const denominator = 1 - 0.0072292 * sinPhi * sinPhi;
-        phi = 2 * Math.atan(Math.pow(c / rho, 1 / n) * Math.pow(Math.pow(numerator / denominator, n), 1)) - 90;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
     }
 
-    return { lat: phi, lon: lambda_deg };
+    const a = 6378137;
+    const e = Math.sqrt(0.00669438002290);
+    const toRad = (degrees) => (degrees * Math.PI) / 180;
+    const toDeg = (radians) => (radians * 180) / Math.PI;
+    const latitudeOfOrigin = toRad(49);
+    const centralMeridian = toRad(3);
+    const firstStandardParallel = toRad(48.25);
+    const secondStandardParallel = toRad(49.75);
+    const falseEasting = 1700000;
+    const falseNorthing = 8200000;
+
+    const m = (phi) => Math.cos(phi) / Math.sqrt(1 - e * e * Math.sin(phi) ** 2);
+    const t = (phi) => {
+        const sinPhi = Math.sin(phi);
+        return Math.tan(Math.PI / 4 - phi / 2) / (((1 - e * sinPhi) / (1 + e * sinPhi)) ** (e / 2));
+    };
+
+    const n =
+        (Math.log(m(firstStandardParallel)) - Math.log(m(secondStandardParallel))) /
+        (Math.log(t(firstStandardParallel)) - Math.log(t(secondStandardParallel)));
+    const f = m(firstStandardParallel) / (n * t(firstStandardParallel) ** n);
+    const rho0 = a * f * t(latitudeOfOrigin) ** n;
+    const dx = x - falseEasting;
+    const dy = rho0 - (y - falseNorthing);
+    const rho = Math.sign(n) * Math.sqrt(dx * dx + dy * dy);
+    const theta = Math.atan2(dx, dy);
+    const projectedT = (rho / (a * f)) ** (1 / n);
+
+    let lat = Math.PI / 2 - 2 * Math.atan(projectedT);
+    for (let i = 0; i < 8; i += 1) {
+        const sinLat = Math.sin(lat);
+        lat =
+            Math.PI / 2 -
+            2 * Math.atan(projectedT * (((1 - e * sinLat) / (1 + e * sinLat)) ** (e / 2)));
+    }
+
+    const lon = centralMeridian + theta / n;
+    const point = { lat: toDeg(lat), lon: toDeg(lon) };
+    return isValidWgs84(point.lat, point.lon) ? point : null;
+}
+
+function normalizeGeoPoint(arbre) {
+    const rawLat = Number(arbre?.latitude);
+    const rawLon = Number(arbre?.longitude);
+
+    if (isValidWgs84(rawLat, rawLon)) {
+        return { lat: rawLat, lon: rawLon };
+    }
+
+    if (isValidWgs84(rawLon, rawLat)) {
+        return { lat: rawLon, lon: rawLat };
+    }
+
+    // Donnees de Saint-Quentin en CC49 (x=longitude, y=latitude)
+    const converted = lambertCc49ToWgs84(rawLon, rawLat);
+    if (converted) {
+        return converted;
+    }
+
+    // Fallback si x/y ont ete inverses dans certaines lignes
+    return lambertCc49ToWgs84(rawLat, rawLon);
 }
 
 // Déterminer le cluster label basé sur hauteur_totale et diametre_tronc
@@ -92,6 +135,8 @@ function displayClusterStats(arbres) {
 // Afficher la carte Plotly avec clusters
 function displayClusterMap(arbres) {
     const clusters = {};
+    const allPoints = [];
+    let validPoints = 0;
     
     arbres.forEach(arbre => {
         const cluster = predictCluster(arbre.hauteur_totale, arbre.diametre_tronc);
@@ -99,8 +144,12 @@ function displayClusterMap(arbres) {
             clusters[cluster] = { lat: [], lon: [], text: [], ids: [] };
         }
         
-        // Convertir de CC49 à WGS84
-        const wgs84 = lambertCc49ToWgs84(arbre.longitude, arbre.latitude);
+        const wgs84 = normalizeGeoPoint(arbre);
+        if (!wgs84) {
+            return;
+        }
+        validPoints += 1;
+        allPoints.push(wgs84);
         
         clusters[cluster].lat.push(wgs84.lat);
         clusters[cluster].lon.push(wgs84.lon);
@@ -120,29 +169,53 @@ function displayClusterMap(arbres) {
         text: data.text,
         mode: 'markers',
         marker: {
-            size: 10,
+            size: 16,
             color: clusterColors[cluster],
-            opacity: 0.8,
-            sizemode: 'diameter'
+            opacity: 1,
+            symbol: 'circle',
+            line: {
+                width: 2,
+                color: '#ffffff'
+            }
         },
         name: clusterNames[cluster],
         hovertemplate: '%{text}<extra></extra>',
         customdata: data.ids
     }));
 
+    const center = allPoints.length
+        ? {
+            lat: allPoints.reduce((sum, p) => sum + p.lat, 0) / allPoints.length,
+            lon: allPoints.reduce((sum, p) => sum + p.lon, 0) / allPoints.length,
+        }
+        : { lat: 49.8489, lon: 3.2870 };
+
     const layout = {
         title: 'Clusters K-Means des Arbres',
         mapbox: {
             style: 'open-street-map',
-            center: { lat: 49.86, lon: 3.30 },
-            zoom: 12
+            center,
+            zoom: 13
         },
         hovermode: 'closest',
         margin: { r: 0, t: 30, l: 0, b: 0 },
         legend: { x: 0.02, y: 0.98 }
     };
 
-    Plotly.newPlot('cluster-map-plot', traces, layout, { responsive: true });
+    Plotly.newPlot('cluster-map-plot', traces, layout, {
+        responsive: true,
+        displayModeBar: true,
+        scrollZoom: true,
+    });
+
+    const loading = document.getElementById('loading');
+    if (loading) {
+        if (!validPoints) {
+            loading.innerHTML = '<p style="color: #b42318;">Aucun point geographique valide a afficher.</p>';
+        } else {
+            loading.innerHTML = `<p style="color: #1f7a3d;">${validPoints} points affiches sur la carte.</p>`;
+        }
+    }
 }
 
 // Afficher le tableau des clusters

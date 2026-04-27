@@ -13,42 +13,41 @@
 <body>
   <div class="site-shell">
     <header class="topbar">
-      <div class="brand">arborData saint-quentin</div>
+      <div class="brand">ArborData Saint-Quentin</div>
       <nav class="nav">
-        <a href="index.html">accueil</a>
-        <a href="add.html">ajouter un arbre</a>
-        <a class="active" href="map.html">visualisation</a>
+        <a href="index.html">Accueil</a>
+        <a href="add.html">Ajouter un arbre</a>
+        <a class="active" href="map.html">Visualisation</a>
+        <a href="IACluster.html">Clusters IA</a>
+        <a href="IARisque.html">Age/Risque IA</a>
       </nav>
     </header>
 
-    <main class="grid" style="margin-top:16px;">
-      <section class="panel" style="display:grid; gap:12px;">
-        <h1 class="page-title" style="margin:0;">visualisation des arbres</h1>
-        <p class="page-subtitle">tableau + carte plotly relies a la base de donnees.</p>
+    <main class="grid page-main">
+      <section class="panel panel-stack">
+        <h1 class="page-title section-title">Visualisation des arbres</h1>
+        <p class="page-subtitle">Tableau et carte Plotly relies a la base de donnees.</p>
 
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+        <div class="toolbar-grid">
           <div class="field">
-            <label for="filter-search">rechercher une espece</label>
-            <input id="filter-search" type="text" placeholder="ex: quercus" />
+            <label for="filter-search">Rechercher une espece</label>
+            <input id="filter-search" type="text" placeholder="Ex: quercus" />
           </div>
           <div class="field">
-            <label for="filter-etat">filtrer par etat</label>
+            <label for="filter-etat">Filtrer par etat</label>
             <select id="filter-etat">
-              <option value="">tous les etats</option>
+              <option value="">Tous les etats</option>
             </select>
           </div>
-          <div class="field" style="align-self:end;">
-            <button id="btn-refresh" class="btn btn-primary" type="button">rafraichir les donnees</button>
-          </div>
-          <div class="field" style="align-self:end;">
-            <a href="IACluster.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">🎯 clusters IA</a>
-          </div>
-          <div class="field" style="align-self:end;">
-            <a href="IARisque.html" class="btn btn-primary" style="text-decoration: none; text-align: center;">⚠️ age/risque IA</a>
+
+          <div class="toolbar-actions">
+            <button id="btn-refresh" class="btn btn-primary" type="button">Rafraichir les donnees</button>
+            <a href="IACluster.html" class="btn btn-primary">Clusters IA</a>
+            <a href="IARisque.html" class="btn btn-primary">Age/Risque IA</a>
           </div>
         </div>
 
-        <p id="map-status" class="page-subtitle">chargement...</p>
+        <p id="map-status" class="page-subtitle">Chargement...</p>
         <p id="arbres-count" class="page-subtitle"></p>
       </section>
 
@@ -61,21 +60,21 @@
           <table>
             <thead>
               <tr>
-                <th>id</th>
-                <th>espece</th>
-                <th>quartier</th>
-                <th>type</th>
-                <th>h totale</th>
-                <th>h tronc</th>
-                <th>diametre</th>
-                <th>remarquable</th>
-                <th>latitude</th>
-                <th>longitude</th>
-                <th>etat</th>
-                <th>stade</th>
-                <th>port</th>
-                <th>pied</th>
-                <th>age</th>
+                <th>ID</th>
+                <th>Espece</th>
+                <th>Quartier</th>
+                <th>Type</th>
+                <th>H totale</th>
+                <th>H tronc</th>
+                <th>Diametre</th>
+                <th>Remarquable</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Etat</th>
+                <th>Stade</th>
+                <th>Port</th>
+                <th>Pied</th>
+                <th>Age</th>
               </tr>
             </thead>
             <tbody id="arbres-body"></tbody>

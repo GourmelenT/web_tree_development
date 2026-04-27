@@ -35,15 +35,6 @@ function runSchema(PDO $pdo, string $schemaPath): void
 
 function createDatabaseAndTables(): void
 {
-    $config = getDbConfig();
-
-    if ($config['driver'] === 'sqlite') {
-        $pdo = getConnection();
-        runSchema($pdo, __DIR__ . '/create_table_sqlite.sql');
-        echo "base sqlite et tables creees avec succes." . PHP_EOL;
-        return;
-    }
-
     // en mysql distant, on part d'une base deja creee (ex: phpmyadmin hebergeur)
     $pdo = getConnection();
 

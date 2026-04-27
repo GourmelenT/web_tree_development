@@ -4,67 +4,158 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db_connection.php';
 
-function insertSampleData(): void
+function cleanText(?string $value, string $default = 'inconnu'): string
 {
+    if ($value === null) {
+        return $default;
+    }
+
+    $trimmed = trim($value);
+    if ($trimmed === '' || strtoupper($trimmed) === 'NA') {
+        return $default;
+    }
+
+    return $trimmed;
+}
+
+function toFloatOrZero(?string $value): float
+{
+    $clean = cleanText($value, '0');
+    $clean = str_replace(',', '.', $clean);
+    return is_numeric($clean) ? (float) $clean : 0.0;
+}
+
+function toIntOrZero(?string $value): int
+{
+    $clean = cleanText($value, '0');
+    return is_numeric($clean) ? (int) $clean : 0;
+}
+
+function toBoolInt(?string $value): int
+{
+    $clean = strtolower(cleanText($value, 'non'));
+    return in_array($clean, ['oui', 'yes', '1', 'true'], true) ? 1 : 0;
+}
+
+function toSqlDate(?string $value): string
+{
+    $clean = cleanText($value, '');
+    if ($clean === '') {
+        return '';
+    }
+
+    $candidate = str_replace('/', '-', $clean);
+    $timestamp = strtotime($candidate);
+    if ($timestamp === false) {
+        return '';
+    }
+
+    return date('Y-m-d', $timestamp);
+}
+
+function getOrCreateId(PDO $pdo, array &$cache, string $cacheKey, string $selectSql, string $insertSql, array $params): int
+{
+    if (isset($cache[$cacheKey])) {
+        return $cache[$cacheKey];
+    }
+
+    $select = $pdo->prepare($selectSql);
+    $select->execute($params);
+    $foundId = $select->fetchColumn();
+    if ($foundId !== false) {
+        $cache[$cacheKey] = (int) $foundId;
+        return (int) $foundId;
+    }
+
+    $insert = $pdo->prepare($insertSql);
+    $insert->execute($params);
+    $id = (int) $pdo->lastInsertId();
+    $cache[$cacheKey] = $id;
+    return $id;
+}
+
+function resetTables(PDO $pdo): void
+{
+    // raz pour eviter les doublons
+    $pdo->exec('DELETE FROM possede');
+    $pdo->exec('DELETE FROM ARBRE');
+    $pdo->exec('DELETE FROM est_de_type');
+    $pdo->exec('DELETE FROM LOCALISATION');
+    $pdo->exec('DELETE FROM ESPECE');
+    $pdo->exec('DELETE FROM FEUILLAGE');
+    $pdo->exec('DELETE FROM ETAT');
+    $pdo->exec('DELETE FROM PORT');
+    $pdo->exec('DELETE FROM PIED');
+    $pdo->exec('DELETE FROM STADE_DEV');
+    $pdo->exec('DELETE FROM SITUATION');
+}
+
+function pickRandomRowsFromCsv($handle, int $limit): array
+{
+    $rows = [];
+
+    while (($row = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
+        $rows[] = $row;
+    }
+
+    if (count($rows) <= $limit) {
+        return $rows;
+    }
+
+    shuffle($rows);
+    return array_slice($rows, 0, $limit);
+}
+
+function insertCsvData(string $csvPath): void
+{
+    if (!is_file($csvPath)) {
+        throw new RuntimeException('fichier data_clean.csv introuvable');
+    }
+
     $pdo = getConnection();
+    $handle = fopen($csvPath, 'r');
+    if ($handle === false) {
+        throw new RuntimeException('impossible d\'ouvrir data_clean.csv');
+    }
 
     try {
         // debut transac
         $pdo->beginTransaction();
+        resetTables($pdo);
 
-        // tables ref d'abord
-        $stmt = $pdo->prepare('INSERT INTO FEUILLAGE (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Caduc']);
-        $feuillageId = (int) $pdo->lastInsertId();
+        $header = fgetcsv($handle, 0, ',', '"', '\\');
+        if ($header === false) {
+            throw new RuntimeException('csv vide ou header invalide');
+        }
 
-        $stmt = $pdo->prepare('INSERT INTO ESPECE (nom_latin, feuillage) VALUES (:nom_latin, :feuillage)');
-        $stmt->execute([
-            ':nom_latin' => 'Acer platanoides',
-            ':feuillage' => $feuillageId,
-        ]);
-        $especeId = (int) $pdo->lastInsertId();
+        $indexByName = [];
+        foreach ($header as $idx => $name) {
+            $indexByName[trim((string) $name)] = $idx;
+        }
 
-        $stmt = $pdo->prepare('INSERT INTO ETAT (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Bon']);
-        $etatId = (int) $pdo->lastInsertId();
+        $required = [
+            'X', 'Y', 'clc_quartier', 'clc_secteur', 'haut_tot', 'haut_tronc',
+            'tronc_diam', 'fk_arb_etat', 'fk_stadedev', 'fk_port', 'fk_pied',
+            'fk_situation', 'last_edited_date', 'nomlatin', 'feuillage',
+            'remarquable', 'age_estim', 'clc_nbr_diag', 'dte_plantation',
+        ];
+        foreach ($required as $col) {
+            if (!array_key_exists($col, $indexByName)) {
+                throw new RuntimeException('colonne manquante dans csv: ' . $col);
+            }
+        }
 
-        $stmt = $pdo->prepare('INSERT INTO PORT (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Evase']);
-        $portId = (int) $pdo->lastInsertId();
+        $cacheFeuillage = [];
+        $cacheEspece = [];
+        $cacheEtat = [];
+        $cachePort = [];
+        $cachePied = [];
+        $cacheStade = [];
+        $cacheSituation = [];
+        $cacheLoc = [];
+        $linksEspeceFeuillage = [];
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO LOCALISATION (quartier, secteur, longitude, latitude)
-             VALUES (:quartier, :secteur, :longitude, :latitude)'
-        );
-        $stmt->execute([
-            ':quartier' => 'Centre-ville',
-            ':secteur' => 'Secteur A',
-            ':longitude' => 2.3522,
-            ':latitude' => 48.8566,
-        ]);
-        $localisationId = (int) $pdo->lastInsertId();
-
-        $stmt = $pdo->prepare('INSERT INTO SITUATION (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Alignement']);
-        $situationId = (int) $pdo->lastInsertId();
-
-        $stmt = $pdo->prepare('INSERT INTO PIED (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Gazon']);
-        $piedId = (int) $pdo->lastInsertId();
-
-        $stmt = $pdo->prepare('INSERT INTO STADE_DEV (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => 'Adulte']);
-        $stadeDevId = (int) $pdo->lastInsertId();
-
-        // lien espece/feuillage
-        $stmt = $pdo->prepare('INSERT INTO est_de_type (id_feuillage, id_espece) VALUES (:id_feuillage, :id_espece)');
-        $stmt->execute([
-            ':id_feuillage' => $feuillageId,
-            ':id_espece' => $especeId,
-        ]);
-
-        // insert arbre principal
-        $stmt = $pdo->prepare(
+        $insertArbre = $pdo->prepare(
             'INSERT INTO ARBRE (
                 hauteur_tronc, hauteur_totale, diametre_tronc, remarquable,
                 date_plantation, age_estime, cluster_prediction, date_edited,
@@ -76,46 +167,162 @@ function insertSampleData(): void
             )'
         );
 
-        $stmt->execute([
-            ':hauteur_tronc' => 2.3,
-            ':hauteur_totale' => 7.8,
-            ':diametre_tronc' => 0.45,
-            ':remarquable' => 0,
-            ':date_plantation' => '2010-04-15',
-            ':age_estime' => 16,
-            ':cluster_prediction' => 1,
-            ':date_edited' => '2026-04-27',
-            ':id_espece' => $especeId,
-            ':id_etat' => $etatId,
-            ':id_stad_dev' => $stadeDevId,
-            ':id_port' => $portId,
-            ':id_pied' => $piedId,
-            ':id_localisation' => $localisationId,
-        ]);
+        $insertPossede = $pdo->prepare('INSERT INTO possede (id_situation, id_arbre) VALUES (:id_situation, :id_arbre)');
+        $insertType = $pdo->prepare('INSERT INTO est_de_type (id_feuillage, id_espece) VALUES (:id_feuillage, :id_espece)');
 
-        $arbreId = (int) $pdo->lastInsertId();
+        $count = 0;
+        $selectedRows = pickRandomRowsFromCsv($handle, 5);
 
-        // lien situation/arbre
-        $stmt = $pdo->prepare('INSERT INTO possede (id_situation, id_arbre) VALUES (:id_situation, :id_arbre)');
-        $stmt->execute([
-            ':id_situation' => $situationId,
-            ':id_arbre' => $arbreId,
-        ]);
+        foreach ($selectedRows as $row) {
+            $quartier = cleanText($row[$indexByName['clc_quartier']] ?? null);
+            $secteur = cleanText($row[$indexByName['clc_secteur']] ?? null);
+            $longitude = toFloatOrZero($row[$indexByName['X']] ?? null);
+            $latitude = toFloatOrZero($row[$indexByName['Y']] ?? null);
 
-        // fin ok
+            $feuillageLib = cleanText($row[$indexByName['feuillage']] ?? null);
+            $nomLatin = cleanText($row[$indexByName['nomlatin']] ?? null);
+            $etatLib = cleanText($row[$indexByName['fk_arb_etat']] ?? null);
+            $stadeLib = cleanText($row[$indexByName['fk_stadedev']] ?? null);
+            $portLib = cleanText($row[$indexByName['fk_port']] ?? null);
+            $piedLib = cleanText($row[$indexByName['fk_pied']] ?? null);
+            $situationLib = cleanText($row[$indexByName['fk_situation']] ?? null);
+
+            $dateEdited = toSqlDate($row[$indexByName['last_edited_date']] ?? null);
+            $datePlantation = toSqlDate($row[$indexByName['dte_plantation']] ?? null);
+            if ($dateEdited === '') {
+                $dateEdited = date('Y-m-d');
+            }
+            if ($datePlantation === '') {
+                $datePlantation = $dateEdited;
+            }
+
+            $feuillageId = getOrCreateId(
+                $pdo,
+                $cacheFeuillage,
+                $feuillageLib,
+                'SELECT id_feuillage FROM FEUILLAGE WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO FEUILLAGE (libelle) VALUES (:libelle)',
+                [':libelle' => $feuillageLib]
+            );
+
+            $especeId = getOrCreateId(
+                $pdo,
+                $cacheEspece,
+                $nomLatin . '|' . $feuillageId,
+                'SELECT id_espece FROM ESPECE WHERE nom_latin = :nom_latin AND feuillage = :feuillage LIMIT 1',
+                'INSERT INTO ESPECE (nom_latin, feuillage) VALUES (:nom_latin, :feuillage)',
+                [':nom_latin' => $nomLatin, ':feuillage' => $feuillageId]
+            );
+
+            $etatId = getOrCreateId(
+                $pdo,
+                $cacheEtat,
+                $etatLib,
+                'SELECT id_etat FROM ETAT WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO ETAT (libelle) VALUES (:libelle)',
+                [':libelle' => $etatLib]
+            );
+
+            $portId = getOrCreateId(
+                $pdo,
+                $cachePort,
+                $portLib,
+                'SELECT id_port FROM PORT WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO PORT (libelle) VALUES (:libelle)',
+                [':libelle' => $portLib]
+            );
+
+            $piedId = getOrCreateId(
+                $pdo,
+                $cachePied,
+                $piedLib,
+                'SELECT id_pied FROM PIED WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO PIED (libelle) VALUES (:libelle)',
+                [':libelle' => $piedLib]
+            );
+
+            $stadeId = getOrCreateId(
+                $pdo,
+                $cacheStade,
+                $stadeLib,
+                'SELECT id_stad_dev FROM STADE_DEV WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO STADE_DEV (libelle) VALUES (:libelle)',
+                [':libelle' => $stadeLib]
+            );
+
+            $situationId = getOrCreateId(
+                $pdo,
+                $cacheSituation,
+                $situationLib,
+                'SELECT id_situation FROM SITUATION WHERE libelle = :libelle LIMIT 1',
+                'INSERT INTO SITUATION (libelle) VALUES (:libelle)',
+                [':libelle' => $situationLib]
+            );
+
+            $locKey = $quartier . '|' . $secteur . '|' . $longitude . '|' . $latitude;
+            $localisationId = getOrCreateId(
+                $pdo,
+                $cacheLoc,
+                $locKey,
+                'SELECT id_localisation FROM LOCALISATION WHERE quartier = :quartier AND secteur = :secteur AND longitude = :longitude AND latitude = :latitude LIMIT 1',
+                'INSERT INTO LOCALISATION (quartier, secteur, longitude, latitude) VALUES (:quartier, :secteur, :longitude, :latitude)',
+                [
+                    ':quartier' => $quartier,
+                    ':secteur' => $secteur,
+                    ':longitude' => $longitude,
+                    ':latitude' => $latitude,
+                ]
+            );
+
+            $typeKey = $feuillageId . '-' . $especeId;
+            if (!isset($linksEspeceFeuillage[$typeKey])) {
+                $insertType->execute([
+                    ':id_feuillage' => $feuillageId,
+                    ':id_espece' => $especeId,
+                ]);
+                $linksEspeceFeuillage[$typeKey] = true;
+            }
+
+            $insertArbre->execute([
+                ':hauteur_tronc' => toFloatOrZero($row[$indexByName['haut_tronc']] ?? null),
+                ':hauteur_totale' => toFloatOrZero($row[$indexByName['haut_tot']] ?? null),
+                ':diametre_tronc' => toFloatOrZero($row[$indexByName['tronc_diam']] ?? null),
+                ':remarquable' => toBoolInt($row[$indexByName['remarquable']] ?? null),
+                ':date_plantation' => $datePlantation,
+                ':age_estime' => toIntOrZero($row[$indexByName['age_estim']] ?? null),
+                ':cluster_prediction' => toIntOrZero($row[$indexByName['clc_nbr_diag']] ?? null),
+                ':date_edited' => $dateEdited,
+                ':id_espece' => $especeId,
+                ':id_etat' => $etatId,
+                ':id_stad_dev' => $stadeId,
+                ':id_port' => $portId,
+                ':id_pied' => $piedId,
+                ':id_localisation' => $localisationId,
+            ]);
+
+            $arbreId = (int) $pdo->lastInsertId();
+            $insertPossede->execute([
+                ':id_situation' => $situationId,
+                ':id_arbre' => $arbreId,
+            ]);
+
+            $count++;
+        }
+
         $pdo->commit();
-        echo "Donnees inserees avec succes." . PHP_EOL;
+        echo "donnees csv inserees: {$count}" . PHP_EOL;
     } catch (Throwable $e) {
-        // annule si erreur catch
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
 
-        echo 'Erreur lors de l\'insertion: ' . $e->getMessage() . PHP_EOL;
+        echo 'erreur lors de l\'insertion csv: ' . $e->getMessage() . PHP_EOL;
         exit(1);
+    } finally {
+        fclose($handle);
     }
 }
 
 if (PHP_SAPI === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
-    insertSampleData();
+    insertCsvData(__DIR__ . '/data_clean.csv');
 }

@@ -1,268 +1,84 @@
 <!DOCTYPE html>
-
-<html class="light" lang="en">
-
+<html lang="fr">
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ArborData | Digital Forestry Visualization</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link href="css/base.css" rel="stylesheet" />
-    <link href="css/map.css" rel="stylesheet" />
-    <script defer src="js/mobile-nav.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArborData - Visualisation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="css/app.css" rel="stylesheet" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 </head>
-
-<body class="map-page-shell">
-    <!-- TopNavBar -->
-    <header class="map-topbar site-nav-shell">
-        <div class="map-topbar-group site-nav-row">
-            <h1 class="map-brand-title">ArborData</h1>
-            <button class="site-nav-toggle material-symbols-outlined" aria-label="Ouvrir le menu" aria-expanded="false" type="button">menu</button>
-            <nav class="map-main-nav site-nav-panel">
-                <a class="map-nav-link" href="index.html">Dashboard</a>
-                <a class="map-nav-link-active" href="map.html">Map</a>
-                <a class="map-nav-link" href="add.html">Add Tree</a>
-                <a class="map-nav-link" href="IACluster.html">IA Clusters</a>
-                <a class="map-nav-link" href="IARisque.html">IA Risque</a>
-            </nav>
-        </div>
-        <div class="map-topbar-group-02">
-            <button class="map-button">
-                <span class="material-symbols-outlined map-icon">notifications</span>
-            </button>
-            <button class="map-button">
-                <span class="material-symbols-outlined map-icon">account_circle</span>
-            </button>
-        </div>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <div class="brand">arborData saint-quentin</div>
+      <nav class="nav">
+        <a href="index.html">accueil</a>
+        <a href="add.html">ajouter un arbre</a>
+        <a class="active" href="map.html">visualisation</a>
+      </nav>
     </header>
-    <div class="map-map-layer">
-        <!-- SideNavBar -->
-        <aside class="map-sidebar">
-            <div class="map-sidebar-group">
-                <h2 class="map-section-title">Map Controls</h2>
-                <p class="map-copy-text">Refine Visualization</p>
-            </div>
-            <div class="map-sidebar-group-02">
-                <div class="map-sidebar-item">
-                    <span class="material-symbols-outlined map-icon-02">filter_list</span>
-                    <span>Species Filter</span>
-                </div>
-                <div class="map-sidebar-item-02">
-                    <span class="material-symbols-outlined map-icon-02">psychiatry</span>
-                    <span>Health Status</span>
-                </div>
-                <div class="map-sidebar-item-02">
-                    <span class="material-symbols-outlined map-icon-02">warning</span>
-                    <span>Risk Analysis</span>
-                </div>
-                <div class="map-sidebar-item-02">
-                    <span class="material-symbols-outlined map-icon-02">calendar_today</span>
-                    <span>Date Range</span>
-                </div>
-            </div>
-            <div class="map-sidebar-group-03">
-                <button class="map-sidebar-button">Apply Filters</button>
-            </div>
-        </aside>
-        <!-- Main Content Area -->
-        <main class="map-main-content">
-            <!-- Map Visualization -->
-            <section class="map-section">
-                <div class="map-map-overlay">
-                    <img class="map-map-image"
-                        data-alt="high-resolution aerial satellite view of a city park with diverse tree canopies and walking paths in soft natural lighting"
-                        data-location="Portland, Oregon"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm6Q7qfTz-E_bfF1Iy-se5FQESZC058LU3FRq77gkcpmE3NLiYYGO1X-2B9bjtoU44ekMRPtNiRMTPF6jYW6GmE9PRHqSoo5lHwNMysYnUqPnh4CnHav3chIAsx_Bua4khwR9MC1Jr7LWfISyR3ovBORFL1ajwwBoPA1sgM_ljVaHv0xiDD9LxEDcAeg4_VBRZQ6ZK3TUtE0pLkAmiDp2FK2xlbSgEnAv7r36n6-YE6w7q9kJ3WPN7NBXZ8SuuDKI25ThEKM9udQs" />
-                </div>
-                <!-- Custom Map Overlays -->
-                <div class="map-map-overlay-02">
-                    <!-- Marker 1: Healthy -->
-                    <div class="map-map-overlay-03">
-                        <div class="map-map-layer-02"></div>
-                        <!-- Tooltip Mockup -->
-                        <div class="map-map-overlay-04">
-                            <div class="map-map-layer-03">
-                                <h4 class="map-card-title">Quercus robur</h4>
-                                <span class="map-label-healthy">HEALTHY</span>
-                            </div>
-                            <div class="map-map-layer-04">
-                                <div class="map-map-layer-05"><span>Height:</span><span
-                                        class="map-label-18-4m">18.4m</span></div>
-                                <div class="map-map-layer-05"><span>Diameter:</span><span
-                                        class="map-label-18-4m">65cm</span></div>
-                                <div class="map-map-layer-05"><span>Age:</span><span class="map-label-18-4m">42
-                                        yrs</span></div>
-                            </div>
-                            <div class="map-map-layer-06">
-                                <span class="material-symbols-outlined map-icon-03">sensors</span>
-                                <span>Sensor: ACTIVE</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Marker 2: Monitor -->
-                    <div class="map-map-overlay-05">
-                        <div class="map-map-layer-07"></div>
-                    </div>
-                    <!-- Marker 3: Healthy -->
-                    <div class="map-map-overlay-06">
-                        <div class="map-map-layer-08"></div>
-                    </div>
-                </div>
-                <!-- Map Controls Floating -->
-                <div class="map-map-overlay-07">
-                    <button class="map-button-02">
-                        <span class="material-symbols-outlined map-icon-04">layers</span>
-                    </button>
-                    <button class="map-button-02">
-                        <span class="material-symbols-outlined map-icon-04">add</span>
-                    </button>
-                    <button class="map-button-02">
-                        <span class="material-symbols-outlined map-icon-04">remove</span>
-                    </button>
-                </div>
-            </section>
-            <!-- Data Dashboard Section -->
-            <div class="map-grid-panel">
-                <!-- Stat Card 1 -->
-                <div class="map-map-layer-09">
-                    <span class="map-label-total-canopy-cover">TOTAL CANOPY COVER</span>
-                    <div class="map-map-layer-10">
-                        <h4 class="map-card-title-02">34.2%</h4>
-                        <span class="map-label-1-2-trending-up">+1.2% <span
-                                class="material-symbols-outlined map-icon-05">trending_up</span></span>
-                    </div>
-                </div>
-                <!-- Stat Card 2 -->
-                <div class="map-map-layer-09">
-                    <span class="map-label-total-canopy-cover">AVERAGE TREE HEALTH</span>
-                    <div class="map-map-layer-10">
-                        <h4 class="map-card-title-02">88/100</h4>
-                        <span class="map-label-0-4-trending-down">-0.4% <span
-                                class="material-symbols-outlined map-icon-05">trending_down</span></span>
-                    </div>
-                </div>
-                <!-- Stat Card 3 -->
-                <div class="map-map-layer-09">
-                    <span class="map-label-total-canopy-cover">SENSORS ONLINE</span>
-                    <div class="map-map-layer-10">
-                        <h4 class="map-card-title-02">1,240</h4>
-                        <span class="map-label-1-2-trending-up">Active</span>
-                    </div>
-                </div>
-                <!-- Stat Card 4 -->
-                <div class="map-map-layer-09">
-                    <span class="map-label-total-canopy-cover">CARBON SEQUESTRATION</span>
-                    <div class="map-map-layer-10">
-                        <h4 class="map-card-title-02">2.4k t</h4>
-                        <span class="map-label-monthly">Monthly</span>
-                    </div>
-                </div>
-            </div>
-            <!-- Detailed Data Table -->
-            <div class="map-map-layer-11">
-                <div class="map-map-layer-12">
-                    <h3 class="map-card-title-03">Species Inventory</h3>
-                    <div class="map-map-layer-13">
-                        <button class="map-secondary-button">Export CSV</button>
-                        <button class="map-primary-button">Add New Entry</button>
-                    </div>
-                </div>
-                <div class="map-map-layer-14">
-                    <table class="map-data-table">
-                        <thead class="map-table-head">
-                            <tr>
-                                <th class="map-table-heading">Species Name</th>
-                                <th class="map-table-heading">Height (m)</th>
-                                <th class="map-table-heading">Diameter (cm)</th>
-                                <th class="map-table-heading">Status</th>
-                                <th class="map-table-heading">Last Sync</th>
-                                <th class="map-table-heading">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="map-table-body">
-                            <tr class="map-table-row">
-                                <td class="map-table-cell">Quercus robur (English Oak)</td>
-                                <td class="map-table-cell-02">18.4</td>
-                                <td class="map-table-cell-02">65.2</td>
-                                <td class="map-table-cell-02">
-                                    <span class="map-label-healthy-02">HEALTHY</span>
-                                </td>
-                                <td class="map-table-cell-03">2h ago</td>
-                                <td class="map-table-cell-04">
-                                    <button class="map-button-03">
-                                        <span class="material-symbols-outlined map-icon-02">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="map-table-row">
-                                <td class="map-table-cell">Acer platanoides (Norway Maple)</td>
-                                <td class="map-table-cell-02">12.1</td>
-                                <td class="map-table-cell-02">38.5</td>
-                                <td class="map-table-cell-02">
-                                    <span class="map-label-monitor">MONITOR</span>
-                                </td>
-                                <td class="map-table-cell-03">45m ago</td>
-                                <td class="map-table-cell-04">
-                                    <button class="map-button-03">
-                                        <span class="material-symbols-outlined map-icon-02">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="map-table-row">
-                                <td class="map-table-cell">Betula pendula (Silver Birch)</td>
-                                <td class="map-table-cell-02">15.8</td>
-                                <td class="map-table-cell-02">42.0</td>
-                                <td class="map-table-cell-02">
-                                    <span class="map-label-healthy-02">HEALTHY</span>
-                                </td>
-                                <td class="map-table-cell-03">5h ago</td>
-                                <td class="map-table-cell-04">
-                                    <button class="map-button-03">
-                                        <span class="material-symbols-outlined map-icon-02">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="map-table-row">
-                                <td class="map-table-cell">Fagus sylvatica (Common Beech)</td>
-                                <td class="map-table-cell-02">22.5</td>
-                                <td class="map-table-cell-02">88.3</td>
-                                <td class="map-table-cell-02">
-                                    <span class="map-label-critical">CRITICAL</span>
-                                </td>
-                                <td class="map-table-cell-03">Just now</td>
-                                <td class="map-table-cell-04">
-                                    <button class="map-button-03">
-                                        <span class="material-symbols-outlined map-icon-02">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-    <!-- Footer -->
-    <footer class="map-footer">
-        <div class="map-sidebar-group-02">
-            <span class="map-label-arbordata">ArborData</span>
-            <p class="map-footer-text">© 2024 ArborData. Digital Forestry &amp; Heritage Management.</p>
-        </div>
-        <div class="map-footer-group">
-            <a class="map-footer-link" href="#">Privacy Policy</a>
-            <a class="map-footer-link" href="#">Data Governance</a>
-            <a class="map-footer-link" href="#">Sensor API</a>
-            <a class="map-footer-link" href="#">Documentation</a>
-        </div>
-    </footer>
-</body>
 
+    <main class="grid" style="margin-top:16px;">
+      <section class="panel" style="display:grid; gap:12px;">
+        <h1 class="page-title" style="margin:0;">visualisation des arbres</h1>
+        <p class="page-subtitle">tableau + carte plotly relies a la base de donnees.</p>
+
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+          <div class="field">
+            <label for="filter-search">rechercher une espece</label>
+            <input id="filter-search" type="text" placeholder="ex: quercus" />
+          </div>
+          <div class="field">
+            <label for="filter-etat">filtrer par etat</label>
+            <select id="filter-etat">
+              <option value="">tous les etats</option>
+            </select>
+          </div>
+          <div class="field" style="align-self:end;">
+            <button id="btn-refresh" class="btn btn-primary" type="button">rafraichir les donnees</button>
+          </div>
+        </div>
+
+        <p id="map-status" class="page-subtitle">chargement...</p>
+        <p id="arbres-count" class="page-subtitle"></p>
+      </section>
+
+      <section class="panel">
+        <div id="arbres-map-plot" style="height:480px;"></div>
+      </section>
+
+      <section class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>espece</th>
+                <th>quartier</th>
+                <th>type</th>
+                <th>h totale</th>
+                <th>h tronc</th>
+                <th>diametre</th>
+                <th>remarquable</th>
+                <th>latitude</th>
+                <th>longitude</th>
+                <th>etat</th>
+                <th>stade</th>
+                <th>port</th>
+                <th>pied</th>
+                <th>age</th>
+              </tr>
+            </thead>
+            <tbody id="arbres-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script defer src="js/map-page.js"></script>
+</body>
 </html>

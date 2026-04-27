@@ -1,211 +1,70 @@
 <!DOCTYPE html>
-
-<html class="light" lang="fr">
-
+<html lang="fr">
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ArborData - Gestion Intelligente du Patrimoine Arboré</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link href="css/base.css" rel="stylesheet" />
-    <link href="css/index.css" rel="stylesheet" />
-    <script defer src="js/mobile-nav.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArborData - Accueil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="css/app.css" rel="stylesheet" />
 </head>
-
-<body class="home-page-shell">
-    <!-- TopNavBar -->
-    <header class="home-topbar site-nav-shell site-nav-row">
-        <div class="home-topbar-group">
-            ArborData
-        </div>
-        <nav class="home-main-nav site-nav-panel">
-            <a class="home-nav-link-active" href="index.html">Dashboard</a>
-            <a class="home-nav-link" href="map.html">Map</a>
-            <a class="home-nav-link" href="add.html">Add Tree</a>
-            <a class="home-nav-link" href="IACluster.html">IA Clusters</a>
-            <a class="home-nav-link" href="IARisque.html">IA Risque</a>
-        </nav>
-        <div class="home-topbar-group-02">
-            <button class="material-symbols-outlined home-button">notifications</button>
-            <button class="material-symbols-outlined home-button">account_circle</button>
-            <button class="site-nav-toggle material-symbols-outlined" aria-label="Ouvrir le menu" aria-expanded="false" type="button">menu</button>
-        </div>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <div class="brand">arborData saint-quentin</div>
+      <nav class="nav">
+        <a class="active" href="index.html">accueil</a>
+        <a href="add.html">ajouter un arbre</a>
+        <a href="map.html">visualisation</a>
+      </nav>
     </header>
-    <main>
-        <!-- Hero Section -->
-        <section class="home-hero-section">
-            <div class="home-map-overlay">
-                <img alt="Green city overview" class="home-hero-image"
-                    data-alt="Cinematic wide aerial shot of a sustainable modern city filled with dense green parks and tree-lined avenues under a clear morning sky"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXZMiLRSE7wL4FxeJW3QaR-AEraIfBLyYdWKNmntHQo6Che0zZmvatbniliGsngG73MSE1eUe6vHgQvP-dXaYJ24hvewR-g0Rw-XDdPEUNyolMDCtqPUj2xppjt8DAWYQupe_tHCDoUV9O2CezHWGzFE9mTkQxxM-CutQ0Qb5AyBXFlBH1zN3wFtC2youFbPch2vuVnZc3Or_R_BEf8RwNwDeje4nJog37CEHT03unWmZXws9fCHt9FgVU6O2jgpc9A51Xuv05bak" />
-                <div class="home-map-overlay-02"></div>
-            </div>
-            <div class="home-map-layer">
-                <div class="home-map-layer-02">
-                    <span class="material-symbols-outlined home-icon"
-                        style="font-variation-settings: 'FILL' 1;">psychiatry</span>
-                    <span class="home-label-digital-forestry-revolution">DIGITAL FORESTRY REVOLUTION</span>
-                </div>
-                <h1 class="home-page-title">
-                    Gérez votre patrimoine arboré avec intelligence
-                </h1>
-                <p class="home-copy-text">
-                    Une plateforme innovante pour la gestion, la visualisation et l'analyse prédictive des arbres
-                    urbains. Transformez vos données environnementales en actifs durables.
-                </p>
-                <div class="home-map-layer-03">
-                    <button class="home-button-02">
-                        Accéder au Dashboard
-                        <span class="material-symbols-outlined">arrow_forward</span>
-                    </button>
-                    <button class="home-secondary-button">
-                        Découvrir la solution
-                    </button>
-                </div>
-            </div>
-            <!-- Floating Data Card -->
-            <div class="glass-panel home-map-overlay-03">
-                <div class="home-map-layer-04">
-                    <span class="home-label-live-eco-insight">LIVE ECO-INSIGHT</span>
-                    <span class="home-label"></span>
-                </div>
-                <div class="home-map-layer-05">
-                    <div class="home-map-layer-06">
-                        <span class="home-label-co2-sequestration">CO2 Sequestration</span>
-                        <span class="home-label-12-4t-yr">12.4t/yr</span>
-                    </div>
-                    <div class="home-map-layer-06">
-                        <span class="home-label-co2-sequestration">Tree Canopy Cover</span>
-                        <span class="home-label-12-4t-yr">28.5%</span>
-                    </div>
-                    <div class="home-map-layer-07">
-                        <span class="home-label-co2-sequestration">Health Index</span>
-                        <span class="home-label-optimal">Optimal</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Features Bento Grid -->
-        <section class="home-section">
-            <div class="home-panel">
-                <h2 class="home-section-title">Expertise Technologique &amp; Biologique</h2>
-                <p class="home-copy-text-02">Nos modules combinent télédétection de pointe et intelligence artificielle
-                    pour un monitoring précis de vos écosystèmes urbains.</p>
-            </div>
-            <div class="bento-grid">
-                <!-- Main Feature -->
-                <div class="group home-flex-panel">
-                    <div class="home-panel-02">
-                        <div class="home-flex-panel-02">
-                            <span class="material-symbols-outlined home-icon-02">map</span>
-                        </div>
-                        <h3 class="home-card-title">Cartographie Interactive</h3>
-                        <p class="home-copy-text-03">Visualisez l'ensemble de votre parcelle urbaine avec une précision
-                            centimétrique. Identifiez chaque espèce, son âge et ses besoins spécifiques via notre
-                            interface SIG intégrée.</p>
-                        <ul class="home-list">
-                            <li class="home-list-item"><span
-                                    class="material-symbols-outlined home-icon-03">check_circle</span> Calques de
-                                données personnalisables</li>
-                            <li class="home-list-item"><span
-                                    class="material-symbols-outlined home-icon-03">check_circle</span> Géolocalisation
-                                par capteurs IoT</li>
-                        </ul>
-                    </div>
-                    <div class="home-map-layer-08">
-                        <img alt="Digital Map UI" class="home-map-image"
-                            data-alt="Clean minimal UI of a geographic information system map showing green hexagonal tree markers over a stylized city grid"
-                            data-location="Paris"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8v9veKfT0wMIphV47IXY2y2ONonvgMgdQH9eI12zz_2fIfMhO68G9NwhmzIChQVL87d_QjS5NTmIOnBmsXpC7JZZmQRUGWz54nWbJqfB_XVGUTUWrG8MruFr4s8_zInsuhDDn7I75r3MBXOgMsF5uBxMJignNNxFngSqD60UoNGeshzK9K2J_Rd_shuaDFGWQxn217YJJRPlsGfjyU6hkHzwwbK4KVF_VqgeeGSKFeqKIwOGdDXIYsNjGpQAMCaCQDQ6QLyIEkk0" />
-                    </div>
-                </div>
-                <!-- Feature 2 -->
-                <div class="home-map-layer-09">
-                    <div class="home-map-overlay-04"></div>
-                    <span class="material-symbols-outlined home-icon-04">auto_awesome</span>
-                    <h3 class="home-card-title-02">Prédictions par IA</h3>
-                    <p class="home-copy-text-04">Anticipez les risques de maladies et les besoins en élagage grâce à nos
-                        modèles de machine learning entraînés sur des décennies de données sylvicoles.</p>
-                    <button class="home-button-03">
-                        En savoir plus <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                </div>
-                <!-- Feature 3 -->
-                <div class="home-map-layer-10">
-                    <span class="material-symbols-outlined home-icon-05">inventory_2</span>
-                    <h3 class="home-card-title">Inventaire Digital</h3>
-                    <p class="home-copy-text-03">Gestion centralisée des fiches techniques, historique des interventions
-                        et suivi de la croissance de chaque arbre.</p>
-                </div>
-                <!-- Feature 4 -->
-                <div class="home-map-layer-11">
-                    <div class="home-map-layer-12">
-                        <h3 class="home-card-title">Reporting &amp; Conformité</h3>
-                        <p class="home-copy-text-03">Générez des rapports automatisés pour vos audits environnementaux
-                            et justifiez de votre impact positif sur la biodiversité urbaine.</p>
-                    </div>
-                    <div class="home-map-layer-13">
-                        <div class="home-map-layer-14"></div>
-                        <div class="home-map-layer-15"></div>
-                        <div class="home-map-layer-16"></div>
-                        <div class="home-map-layer-17"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Stats Section -->
-        <section class="home-section-02">
-            <div class="home-grid-panel">
-                <div class="home-panel-03">
-                    <div class="home-panel-04">500k+</div>
-                    <div class="home-panel-05">Arbres Répertoriés</div>
-                </div>
-                <div class="home-panel-03">
-                    <div class="home-panel-04">42</div>
-                    <div class="home-panel-05">Villes Partenaires</div>
-                </div>
-                <div class="home-panel-03">
-                    <div class="home-panel-04">98%</div>
-                    <div class="home-panel-05">Précision IA</div>
-                </div>
-                <div class="home-panel-03">
-                    <div class="home-panel-04">15t</div>
-                    <div class="home-panel-05">CO2/Jour Analysé</div>
-                </div>
-            </div>
-        </section>
-        <!-- Call to Action -->
-        <section class="home-section-03">
-            <h2 class="home-section-title-02">Prêt à transformer votre paysage urbain ?</h2>
-            <p class="home-copy-text-05">Rejoignez les experts de la foresterie urbaine qui utilisent déjà ArborData
-                pour construire des villes plus résilientes et plus vertes.</p>
-            <div class="home-flex-panel-03">
-                <button class="home-primary-button">Démarrer un essai gratuit</button>
-                <button class="home-secondary-button-02">Contacter un expert</button>
-            </div>
-        </section>
-    </main>
-    <!-- Footer -->
-    <footer class="home-footer">
-        <div class="home-footer-group">
-            <div class="home-footer-group-02">ArborData</div>
-            <p class="home-footer-text">© 2024 ArborData. Digital Forestry &amp; Heritage Management.</p>
-        </div>
-        <div class="home-footer-group-03">
-            <a class="home-footer-link" href="#">Privacy Policy</a>
-            <a class="home-footer-link" href="#">Data Governance</a>
-            <a class="home-footer-link" href="#">Sensor API</a>
-            <a class="home-footer-link" href="#">Documentation</a>
-        </div>
-    </footer>
-</body>
 
+    <main class="grid" style="margin-top: 16px;">
+      <section class="hero">
+        <img src="https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80" alt="arbres en ville" />
+        <article class="panel" style="display:grid; gap: 12px;">
+          <h1 class="page-title" style="margin:0;">patrimoine arbore de saint-quentin</h1>
+          <p class="page-subtitle">application web de gestion et visualisation des arbres (alignement, parcs, squares) avec donnees nettoyees, api php et base sqlite/mysql.</p>
+          <p class="page-subtitle">objectif du projet: combiner big data, ia et web pour explorer, enrichir et exploiter le patrimoine arbore de la ville.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn btn-primary" href="map.html">voir la carte et le tableau</a>
+            <a class="btn btn-soft" href="add.html">ajouter un arbre</a>
+          </div>
+        </article>
+      </section>
+
+      <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+        <article class="panel kpi">
+          <span>nombre total d'arbres</span>
+          <span class="value" id="kpi-total">...</span>
+        </article>
+        <article class="panel kpi">
+          <span>arbres remarquables</span>
+          <span class="value" id="kpi-remarkables">...</span>
+        </article>
+        <article class="panel kpi">
+          <span>nombre d'etats differents</span>
+          <span class="value" id="kpi-states">...</span>
+        </article>
+        <article class="panel kpi">
+          <span>hauteur moyenne (m)</span>
+          <span class="value" id="kpi-height">...</span>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2 style="margin-top:0;">fonctionnalites implementees</h2>
+        <ul>
+          <li>page d'accueil avec descriptif du projet, menu et indicateurs dynamiques.</li>
+          <li>formulaire d'ajout complet pour creer un nouvel arbre sans age ni deracinement.</li>
+          <li>visualisation des arbres dans un tableau et sur une carte interactive plotly.</li>
+          <li>routes client-serveur php pour lister, creer et charger les options de reference.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script defer src="js/home.js"></script>
+</body>
 </html>

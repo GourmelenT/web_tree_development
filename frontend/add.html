@@ -1,293 +1,117 @@
 <!DOCTYPE html>
-
-<html lang="en">
-
+<html lang="fr">
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Add Tree | ArborData</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link href="css/base.css" rel="stylesheet" />
-    <link href="css/add.css" rel="stylesheet" />
-    <script defer src="js/mobile-nav.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArborData - Ajouter un arbre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="css/app.css" rel="stylesheet" />
 </head>
-
-<body class="add-tree-page-shell">
-    <!-- TopNavBar Component -->
-    <header class="add-tree-topbar site-nav-shell site-nav-row">
-        <button class="site-nav-toggle material-symbols-outlined" aria-label="Ouvrir le menu" aria-expanded="false" type="button">menu</button>
-        <nav class="add-tree-main-nav site-nav-panel">
-            <div class="add-tree-topbar-group">
-                ArborData
-            </div>
-            <div class="add-tree-topbar-group-02">
-                <a class="add-tree-nav-link" href="index.html">Dashboard</a>
-                <a class="add-tree-nav-link" href="map.html">Map</a>
-                <a class="add-tree-nav-link-active" href="add.html">Add Tree</a>
-                <a class="add-tree-nav-link" href="IACluster.html">IA Clusters</a>
-                <a class="add-tree-nav-link" href="IARisque.html">IA Risque</a>
-            </div>
-            <div class="add-tree-topbar-group-03">
-                <button class="add-tree-button">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
-                <button class="add-tree-button">
-                    <span class="material-symbols-outlined">account_circle</span>
-                </button>
-            </div>
-        </nav>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <div class="brand">arborData saint-quentin</div>
+      <nav class="nav">
+        <a href="index.html">accueil</a>
+        <a class="active" href="add.html">ajouter un arbre</a>
+        <a href="map.html">visualisation</a>
+      </nav>
     </header>
-    <main class="add-tree-main-content">
-        <!-- Page Header -->
-        <div class="add-tree-map-layer">
-            <h1 class="add-tree-page-title">New Specimen Registry</h1>
-            <p class="add-tree-copy-text">Register a new biological asset into the ArborData network. Precision entry
-                ensures accurate long-term health tracking and AI growth projections.</p>
-        </div>
-        <form action="#" class="add-tree-form" method="POST">
-            <!-- Section 1: Biological Classification -->
-            <section class="form-section-shadow add-tree-section">
-                <div class="add-tree-map-layer-02">
-                    <div class="add-tree-map-layer-03">
-                        <span class="material-symbols-outlined">immunology</span>
-                    </div>
-                    <h2 class="add-tree-section-title">Biological Classification</h2>
-                </div>
-                <div class="add-tree-map-layer-04">
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="species">Species Selection</label>
-                        <select class="add-tree-field-select" id="species" name="species">
-                            <option value="">Select a species...</option>
-                            <option value="quercus_robur">English Oak (Quercus robur)</option>
-                            <option value="fagus_sylvatica">European Beech (Fagus sylvatica)</option>
-                            <option value="acer_pseudoplatanus">Sycamore (Acer pseudoplatanus)</option>
-                            <option value="fraxinus_excelsior">European Ash (Fraxinus excelsior)</option>
-                        </select>
-                        <p class="add-tree-copy-text-02">Start typing for scientific name suggestions.</p>
-                    </div>
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="development_stage">Development Stage</label>
-                        <select class="add-tree-field-select" id="development_stage" name="development_stage">
-                            <option value="sapling">Sapling</option>
-                            <option value="young">Young</option>
-                            <option value="semi-mature">Semi-Mature</option>
-                            <option value="mature">Mature</option>
-                            <option value="ancient">Ancient/Veteran</option>
-                        </select>
-                    </div>
-                    <div class="add-tree-map-layer-06">
-                        <div class="add-tree-map-layer-07">
-                            <span class="add-tree-label-remarkable-tree-status">Remarkable Tree Status</span>
-                            <span class="add-tree-label-identify-if-this-specimen-ho">Identify if this specimen holds
-                                significant heritage or ecological value.</span>
-                        </div>
-                        <label class="add-tree-field-label-02">
-                            <input class="peer add-tree-field-input" name="remarkable" type="checkbox" />
-                            <div class="peer add-tree-map-layer-08"></div>
-                        </label>
-                    </div>
-                </div>
-            </section>
-            <!-- Section 2: Biometric Dimensions -->
-            <section class="form-section-shadow add-tree-section">
-                <div class="add-tree-map-layer-02">
-                    <div class="add-tree-map-layer-03">
-                        <span class="material-symbols-outlined">straighten</span>
-                    </div>
-                    <h2 class="add-tree-section-title">Biometric Dimensions</h2>
-                </div>
-                <div class="add-tree-form-group">
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="total_height">Total Height (m)</label>
-                        <div class="add-tree-form-group-02">
-                            <input class="add-tree-field-input-02" id="total_height" name="total_height"
-                                placeholder="0.0" step="0.1" type="number" />
-                            <span class="add-tree-label-m">m</span>
-                        </div>
-                    </div>
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="trunk_height">Trunk Height (m)</label>
-                        <div class="add-tree-form-group-02">
-                            <input class="add-tree-field-input-02" id="trunk_height" name="trunk_height"
-                                placeholder="0.0" step="0.1" type="number" />
-                            <span class="add-tree-label-m">m</span>
-                        </div>
-                    </div>
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="diameter">Diameter at Breast Height (cm)</label>
-                        <div class="add-tree-form-group-02">
-                            <input class="add-tree-field-input-02" id="diameter" name="diameter" placeholder="0"
-                                step="1" type="number" />
-                            <span class="add-tree-label-m">cm</span>
-                        </div>
-                    </div>
-                    <div class="add-tree-map-layer-05">
-                        <label class="add-tree-field-label" for="crown_type">Crown Morphology</label>
-                        <select class="add-tree-field-select-02" id="crown_type" name="crown_type">
-                            <option value="conical">Conical</option>
-                            <option value="columnar">Columnar</option>
-                            <option value="spreading">Spreading</option>
-                            <option value="weeping">Weeping</option>
-                            <option value="irregular">Irregular</option>
-                        </select>
-                    </div>
-                    <div class="add-tree-form-group-03">
-                        <label class="add-tree-field-label" for="base_type">Base Characteristics</label>
-                        <select class="add-tree-field-select-02" id="base_type" name="base_type">
-                            <option value="standard">Standard/Straight</option>
-                            <option value="buttressed">Buttressed</option>
-                            <option value="aerial">Aerial Roots</option>
-                            <option value="exposed">Exposed Root Plate</option>
-                        </select>
-                    </div>
-                </div>
-            </section>
-            <!-- Section 3: Geospatial Placement -->
-            <section class="form-section-shadow add-tree-section">
-                <div class="add-tree-map-layer-02">
-                    <div class="add-tree-map-layer-03">
-                        <span class="material-symbols-outlined">location_on</span>
-                    </div>
-                    <h2 class="add-tree-section-title">Geospatial Placement</h2>
-                </div>
-                <div class="add-tree-form-group-04">
-                    <div class="add-tree-form-group-05">
-                        <div class="add-tree-map-layer-05">
-                            <label class="add-tree-field-label" for="latitude">Latitude</label>
-                            <input class="add-tree-field-input-03" id="latitude" name="latitude" type="text"
-                                value="51.5074" />
-                        </div>
-                        <div class="add-tree-map-layer-05">
-                            <label class="add-tree-field-label" for="longitude">Longitude</label>
-                            <input class="add-tree-field-input-03" id="longitude" name="longitude" type="text"
-                                value="-0.1278" />
-                        </div>
-                        <button class="add-tree-button-02" type="button">
-                            <span class="material-symbols-outlined add-tree-icon">my_location</span>
-                            Use Current GPS Coordinates
-                        </button>
-                    </div>
-                    <div class="add-tree-form-group-06">
-                        <img class="add-tree-image"
-                            data-alt="stylized topological map with green terrain contours and a single pinpoint marker in a forest clearing"
-                            data-location="London Forest Park"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMzT940Uiy22E6lBGrgtsif9HEiC7_RjF8uM-82AzSan_aPtgpa2QuiNdrRP6FUK4ZONFWKmtzVfgxblsjZ49oKHwstYQigBEuB4m-SY9MJFhQ8CFganpP1AepncKCcY5aa65jJgibBGbKNWaBOyz1AqYvW58lKw_kKc4Zkb2DAdThzibkj3HF5rzLiOrbH0vSXynEyKMa7YbezB6BYcNEeP8rx0tMSg9-4J8c72rCr1imZgxRQmJXKckmHe75QmdE6lQdmNEWiP8" />
-                        <div class="add-tree-map-overlay">
-                            <div class="add-tree-map-layer-09">
-                                <div class="add-tree-map-layer-10"></div>
-                            </div>
-                        </div>
-                        <div class="add-tree-map-overlay-02">
-                            Interactive Picker
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <!-- Section 4: Vital Statistics & Health -->
-            <section class="form-section-shadow add-tree-section">
-                <div class="add-tree-map-layer-02">
-                    <div class="add-tree-map-layer-03">
-                        <span class="material-symbols-outlined">ecg</span>
-                    </div>
-                    <h2 class="add-tree-section-title">Vital Statistics</h2>
-                </div>
-                <div class="add-tree-form-group-07">
-                    <label class="add-tree-field-label">Health Status Assessment</label>
-                    <div class="add-tree-form-group-08">
-                        <label class="group add-tree-field-label-03">
-                            <input checked="" class="peer add-tree-field-input" name="health" type="radio"
-                                value="healthy" />
-                            <div class="add-tree-form-group-09">
-                                <span class="material-symbols-outlined add-tree-icon-02"
-                                    style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                <span class="add-tree-label-healthy">Healthy</span>
-                            </div>
-                        </label>
-                        <label class="group add-tree-field-label-03">
-                            <input class="peer add-tree-field-input" name="health" type="radio" value="monitor" />
-                            <div class="add-tree-form-group-10">
-                                <span class="material-symbols-outlined add-tree-icon-02"
-                                    style="font-variation-settings: 'FILL' 1;">visibility</span>
-                                <span class="add-tree-label-healthy">Monitor</span>
-                            </div>
-                        </label>
-                        <label class="group add-tree-field-label-03">
-                            <input class="peer add-tree-field-input" name="health" type="radio" value="critical" />
-                            <div class="add-tree-form-group-11">
-                                <span class="material-symbols-outlined add-tree-icon-02"
-                                    style="font-variation-settings: 'FILL' 1;">warning</span>
-                                <span class="add-tree-label-healthy">Critical</span>
-                            </div>
-                        </label>
-                        <label class="group add-tree-field-label-03">
-                            <input class="peer add-tree-field-input" name="health" type="radio" value="dormant" />
-                            <div class="add-tree-form-group-12">
-                                <span class="material-symbols-outlined add-tree-icon-02"
-                                    style="font-variation-settings: 'FILL' 1;">bedtime</span>
-                                <span class="add-tree-label-healthy">Dormant</span>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="add-tree-form-group-13">
-                        <label class="add-tree-field-label" for="risk">Initial Risk Analysis</label>
-                        <div class="add-tree-form-group-14">
-                            <div class="add-tree-form-group-15">
-                                <input class="add-tree-field-input-04" id="risk" max="100" min="0" name="risk"
-                                    type="range" />
-                                <div class="add-tree-form-group-16">
-                                    <span>Negligible</span>
-                                    <span>Elevated</span>
-                                    <span>Severe Hazard</span>
-                                </div>
-                            </div>
-                            <div class="add-tree-form-group-17">
-                                12
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <!-- Form Actions -->
-            <div class="add-tree-form-group-18">
-                <div class="add-tree-form-group-19">
-                    <span class="material-symbols-outlined add-tree-icon-03">verified</span>
-                    Data will be validated by the Central Forest Registry AI.
-                </div>
-                <div class="add-tree-form-group-20">
-                    <button class="add-tree-button-03" type="button">
-                        Cancel
-                    </button>
-                    <button class="add-tree-primary-button" type="submit">
-                        <span class="material-symbols-outlined">save</span>
-                        Submit Record
-                    </button>
-                </div>
-            </div>
-        </form>
-    </main>
-    <!-- Footer Component -->
-    <footer class="add-tree-footer">
-        <div class="add-tree-footer-group">
-            <div class="add-tree-footer-group-02">
-                <span class="add-tree-label-arbordata">ArborData</span>
-                © 2024 ArborData. Digital Forestry &amp; Heritage Management.
-            </div>
-            <div class="add-tree-footer-group-03">
-                <a class="add-tree-footer-link" href="#">Privacy Policy</a>
-                <a class="add-tree-footer-link" href="#">Data Governance</a>
-                <a class="add-tree-footer-link" href="#">Sensor API</a>
-                <a class="add-tree-footer-link" href="#">Documentation</a>
-            </div>
-        </div>
-    </footer>
-</body>
 
+    <main>
+      <h1 class="page-title">ajout d'un nouvel arbre</h1>
+      <p class="page-subtitle">formulaire connecte a l'api. les champs age et deracinement ne sont pas demandes.</p>
+
+      <form class="panel add-tree-form" style="margin-top:16px; display:grid; gap:14px;">
+        <section class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px,1fr));">
+          <div class="field">
+            <label for="species">espece</label>
+            <select id="species" required>
+              <option value="">selectionner une espece</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="type">type / feuillage</label>
+            <select id="type" required>
+              <option value="">selectionner un type</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="etat">etat</label>
+            <select id="etat" required>
+              <option value="">selectionner un etat</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="development_stage">stade de developpement</label>
+            <select id="development_stage" required>
+              <option value="">selectionner un stade</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="crown_type">type de port</label>
+            <select id="crown_type" required>
+              <option value="">selectionner un port</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="base_type">type de pied</label>
+            <select id="base_type" required>
+              <option value="">selectionner un pied</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="total_height">hauteur totale (m)</label>
+            <input id="total_height" type="number" step="0.1" min="0" required />
+          </div>
+          <div class="field">
+            <label for="trunk_height">hauteur tronc (m)</label>
+            <input id="trunk_height" type="number" step="0.1" min="0" required />
+          </div>
+          <div class="field">
+            <label for="diameter">diametre tronc (cm)</label>
+            <input id="diameter" type="number" step="0.1" min="0" required />
+          </div>
+          <div class="field">
+            <label for="latitude">latitude</label>
+            <input id="latitude" type="number" step="0.000001" required />
+          </div>
+          <div class="field">
+            <label for="longitude">longitude</label>
+            <input id="longitude" type="number" step="0.000001" required />
+          </div>
+          <div class="field">
+            <label for="quartier">quartier</label>
+            <input id="quartier" type="text" placeholder="ex: quartier du centre-ville" required />
+          </div>
+          <div class="field">
+            <label for="secteur">secteur</label>
+            <input id="secteur" type="text" placeholder="ex: boulevard richelieu" required />
+          </div>
+          <div class="field">
+            <label for="situation">situation</label>
+            <select id="situation" required>
+              <option value="">selectionner une situation</option>
+            </select>
+          </div>
+        </section>
+
+        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+          <input id="remarkable" type="checkbox" /> arbre remarquable
+        </label>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" type="submit">enregistrer l'arbre</button>
+          <a class="btn btn-soft" href="map.html">aller a la visualisation</a>
+        </div>
+
+        <div id="form-feedback" class="feedback" aria-live="polite"></div>
+      </form>
+    </main>
+  </div>
+
+  <script defer src="js/add-tree.js"></script>
+</body>
 </html>

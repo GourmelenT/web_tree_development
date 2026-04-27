@@ -1,0 +1,11 @@
+id_arbre,prediction_etat,risk_score,risk_reason,haut_tot,tronc_diam,age_estim,fk_stadedev,fk_port,fk_pied,fk_situation,fk_revetement
+6,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+7,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+1,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+4,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+3,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+9,SUPPRIMÉ,1.0,"Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%), âge estimé élevé, diamètre du tronc élevé. Score de risque = 100.0%.",25.0,205.0,50.0,VIEUX,SEMI LIBRE,GAZON,Alignement,Non
+8,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+2,REMPLACÉ,1.0,Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%). Score de risque = 100.0%.,5.0,20.0,5.0,JEUNE,SEMI LIBRE,FOSSE ARBRE,Alignement,Non
+6,SUPPRIMÉ,1.0,"Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%), âge estimé élevé, diamètre du tronc élevé. Score de risque = 100.0%.",23.0,210.0,50.0,VIEUX,SEMI LIBRE,GAZON,Alignement,Non
+23,SUPPRIMÉ,1.0,"Risque élevé car probabilité d'être 'EN PLACE' faible (0.0%), âge estimé élevé, diamètre du tronc élevé. Score de risque = 100.0%.",25.0,210.0,50.0,VIEUX,SEMI LIBRE,GAZON,Alignement,Non

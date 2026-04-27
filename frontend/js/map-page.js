@@ -127,6 +127,12 @@ function normalizeGeoPoint(row) {
     return converted;
   }
 
+  // Fallback si des lignes ont ete enregistrees avec x/y inverses.
+  const convertedSwapped = lambertCc49ToWgs84(rawLat, rawLon);
+  if (convertedSwapped) {
+    return convertedSwapped;
+  }
+
   return null;
 }
 
@@ -282,8 +288,6 @@ async function loadArbres() {
     allRows = Array.isArray(payload.data) ? payload.data : [];
     fillEtatFilter(allRows);
     applyFilters();
-
-    if (mapStatus) mapStatus.textContent = 'donnees chargees';
   } catch (error) {
     if (mapStatus) mapStatus.textContent = `erreur: ${error.message}`;
   }

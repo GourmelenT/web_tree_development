@@ -2,29 +2,64 @@
 
 declare(strict_types=1);
 
-$route = $_GET['route'] ?? '';
+$requested = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$localPath = __DIR__ . '/frontend' . $requested;
 
-if (is_string($route) && $route !== '') {
-	switch ($route) {
-		case 'get_arbres':
-			require __DIR__ . '/backend/get_arbres.php';
-			exit;
-
-		case 'add_arbre':
-			require __DIR__ . '/backend/add_arbre.php';
-			exit;
-
-		case 'options':
-			require __DIR__ . '/backend/api/options.php';
-			exit;
-	}
+// Serve static files from frontend
+if (preg_match('#\.(html|css|js|png|jpg|gif|svg|woff|woff2)$#', $requested)) {
+    if (file_exists($localPath) && is_file($localPath)) {
+        $ext = pathinfo($requested, PATHINFO_EXTENSION);
+        $mimes = [
+            'html' => 'text/html',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+        ];
+        header('Content-Type: ' . ($mimes[$ext] ?? 'application/octet-stream'));
+        readfile($localPath);
+        exit;
+    }
 }
 
-$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
-$basePath = rtrim($scriptDir, '/');
-$target = ($basePath === '' || $basePath === '.')
-	? '/frontend/index.html'
-	: $basePath . '/frontend/index.html';
+// Route API calls to backend
+if (preg_match('#^/api/#', $requested)) {
+    $backendFile = __DIR__ . '/backend' . $requested;
+    if (file_exists($backendFile) && is_file($backendFile)) {
+        include $backendFile;
+        exit;
+    }
+}
 
-header('Location: ' . $target, true, 302);
+// Original route handling
+$route = $_GET['route'] ?? '';
+if (is_string($route) && $route !== '') {
+    switch ($route) {
+        case 'get_arbres':
+            require __DIR__ . '/backend/get_arbres.php';
+            exit;
+
+        case 'add_arbre':
+            require __DIR__ . '/backend/add_arbre.php';
+            exit;
+
+        case 'options':
+            require __DIR__ . '/backend/api/options.php';
+            exit;
+    }
+}
+
+// Default redirect to index
+if ($requested === '/' || $requested === '') {
+    header('Location: /index.html', true, 302);
+    exit;
+}
+
+// 404
+header('HTTP/1.1 404 Not Found');
+echo "404 - Not found: $requested";
 exit;

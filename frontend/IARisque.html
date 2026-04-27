@@ -1,229 +1,89 @@
 <!DOCTYPE html>
-
-<html class="light" lang="en">
-
+<html lang="fr">
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>AI Predictions | ArborData</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <link href="css/base.css" rel="stylesheet" />
-    <link href="css/IARisque.css" rel="stylesheet" />
-    <script defer src="js/mobile-nav.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ArborData - Prédiction d'Âge/Risque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <style>
+        .risk-page { display: grid; gap: 16px; padding: 16px; }
+        .tree-selector { display: grid; gap: 12px; }
+        .tree-selector select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .prediction-results { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        .prediction-card { padding: 16px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
+        .prediction-card h3 { margin-top: 0; }
+        .prediction-value { font-size: 24px; font-weight: 700; color: #1e6f3a; margin: 8px 0; }
+        .confidence { font-size: 12px; color: #666; margin-top: 8px; }
+        .risk-high { color: #d32f2f; }
+        .risk-low { color: #2f8f4e; }
+        .risk-medium { color: #ff9800; }
+        .btn { padding: 10px 20px; background: #1e6f3a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #165a2f; }
+        .btn-back { background-color: #1e6f3a; }
+        #loading { padding: 20px; text-align: center; }
+    </style>
 </head>
 
-<body class="risk-page-shell">
-    <!-- TopNavBar -->
-    <header class="risk-topbar site-nav-shell">
-        <div class="risk-topbar-group site-nav-row">
-            <span class="risk-label-arbordata">ArborData</span>
-            <button class="site-nav-toggle material-symbols-outlined" aria-label="Ouvrir le menu" aria-expanded="false" type="button">menu</button>
-            <nav class="risk-main-nav site-nav-panel">
-                <a class="risk-nav-link" href="index.html">Dashboard</a>
-                <a class="risk-nav-link" href="map.html">Map</a>
-                <a class="risk-nav-link" href="add.html">Add Tree</a>
-                <a class="risk-nav-link" href="IACluster.html">IA Clusters</a>
-                <a class="risk-nav-link-active" href="IARisque.html">IA Risque</a>
+<body>
+    <div class="site-shell">
+        <header class="topbar">
+            <div class="brand">arborData saint-quentin</div>
+            <nav class="nav">
+                <a href="index.html">accueil</a>
+                <a href="add.html">ajouter un arbre</a>
+                <a href="map.html">visualisation</a>
+                <a class="active" href="IARisque.html">risque/âge IA</a>
             </nav>
-        </div>
-        <div class="risk-topbar-group-02">
-            <div class="risk-topbar-group-03">
-                <span class="material-symbols-outlined risk-icon">search</span>
-                <input class="risk-field-input" placeholder="Search tree ID or species..." type="text" />
-            </div>
-            <button class="material-symbols-outlined risk-button">notifications</button>
-            <button class="material-symbols-outlined risk-button">account_circle</button>
-        </div>
-    </header>
-    <main class="risk-main-content">
-        <!-- SideNavBar / Map Controls -->
-        <aside class="risk-sidebar">
-            <div class="risk-sidebar-group">
-                <h2 class="risk-section-title">Map Controls</h2>
-                <p class="risk-copy-text">Refine Visualization</p>
-            </div>
-            <nav class="risk-sidebar-nav">
-                <div class="risk-sidebar-item">
-                    <span class="material-symbols-outlined">filter_list</span>
-                    <span class="risk-label-species-filter">Species Filter</span>
-                </div>
-                <div class="risk-sidebar-item">
-                    <span class="material-symbols-outlined">psychiatry</span>
-                    <span class="risk-label-species-filter">Health Status</span>
-                </div>
-                <div class="risk-sidebar-item-02">
-                    <span class="material-symbols-outlined">warning</span>
-                    <span class="risk-label-species-filter">Risk Analysis</span>
-                </div>
-                <div class="risk-sidebar-item">
-                    <span class="material-symbols-outlined">calendar_today</span>
-                    <span class="risk-label-species-filter">Date Range</span>
-                </div>
-            </nav>
-            <button class="risk-sidebar-button">
-                Apply Filters
-            </button>
-        </aside>
-        <!-- Main Content Canvas -->
-        <section class="risk-section">
-            <!-- Left Side: Interactive Map/Selector -->
-            <div class="risk-map-layer">
-                <div class="risk-map-overlay"
-                    data-alt="Satellite map view of a suburban park area with individual trees marked by tech-overlay dots"
-                    data-location="London"
-                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDwejuemrLRPG0qs0y08mEXXqGey2r4VkT9G3na7QmEojqM47yVoT0e2U2e95LLDs4XTnfNWP6iHwBhfShyuUlQg09Y3TfhLqXN8GY07_5z2dXFEaSe0yb7obaK9wBZ7a_dntShfrTWrUuj2M0b-f3gB74ngJvni21cHfSAK1sNqxE57LUNhvUrC8gKt4azXWm--R8bgr1Y94TRcS9RP7TZcTPnkvy5wvEovp9ElD1luoSFaBL-murk4Sup5orqz7h2qwzF73fFYX8')">
-                </div>
-                <div class="risk-map-overlay-02"></div>
-                <!-- Map Overlay UI -->
-                <div class="risk-map-overlay-03">
-                    <div class="risk-map-layer-02">
-                        <span class="risk-label"></span>
-                        <span class="risk-label-live-sensor-data-active">Live Sensor Data Active</span>
-                    </div>
-                </div>
-                <!-- Selected Tree Marker -->
-                <div class="group risk-map-overlay-04">
-                    <div class="risk-map-layer-03">
-                        <span class="material-symbols-outlined risk-icon-02"
-                            style="font-variation-settings: 'FILL' 1;">park</span>
-                    </div>
-                    <div class="risk-map-overlay-05">
-                        ID: TR-8922 | Quercus Robur
-                    </div>
-                </div>
-            </div>
-            <!-- Right Side: AI Predictions Results -->
-            <div class="risk-map-layer-04">
-                <!-- Primary Stats Bento -->
-                <div class="risk-map-layer-05">
-                    <!-- Age Prediction Card -->
-                    <div class="risk-map-layer-06">
-                        <span class="risk-label-estimated-age">Estimated Age</span>
-                        <div class="risk-map-layer-07">45</div>
-                        <span class="risk-label-years">Years</span>
-                        <div class="risk-map-layer-08">
-                            <span class="material-symbols-outlined risk-icon-03">analytics</span>
-                            94% Confidence
-                        </div>
-                    </div>
-                    <!-- Uprooting Risk Card -->
-                    <div class="risk-map-layer-06">
-                        <span class="risk-label-estimated-age">Uprooting Risk</span>
-                        <div class="risk-map-layer-09">
-                            <svg class="risk-gauge-svg">
-                                <circle class="risk-gauge-circle" cx="48" cy="48" fill="transparent" r="40"
-                                    stroke="currentColor" stroke-width="8"></circle>
-                                <circle class="gauge-ring risk-gauge-circle-02" cx="48" cy="48" fill="transparent"
-                                    r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="221"
-                                    stroke-width="8"></circle>
-                            </svg>
-                            <span class="risk-label-12">12%</span>
-                        </div>
-                        <span class="risk-label-low-risk">Low Risk</span>
-                    </div>
-                </div>
-                <!-- Historical Health Trend Chart -->
-                <div class="risk-map-layer-10">
-                    <div class="risk-map-layer-11">
-                        <h3 class="risk-card-title">Health Trend</h3>
-                        <div class="risk-map-layer-12">
-                            <span class="risk-label-02"></span>
-                            <span class="risk-label-vegetation-index-ndvi">Vegetation Index (NDVI)</span>
-                        </div>
-                    </div>
-                    <div class="risk-map-layer-13">
-                        <!-- Mockup Chart Bars -->
-                        <div class="risk-map-layer-14"></div>
-                        <div class="risk-map-layer-15"></div>
-                        <div class="risk-map-layer-16"></div>
-                        <div class="risk-map-layer-17"></div>
-                        <div class="risk-map-layer-18"></div>
-                        <div class="risk-map-layer-19"></div>
-                    </div>
-                    <div class="risk-map-layer-20">
-                        <span>JAN</span><span>MAR</span><span>MAY</span><span>JUL</span><span>SEP</span><span>NOV</span>
-                    </div>
-                </div>
-                <!-- Diagnostic Details Panel -->
-                <div class="risk-map-layer-21">
-                    <div class="risk-map-layer-22">
-                        <h3 class="risk-card-title-02">
-                            <span class="material-symbols-outlined risk-icon-04">auto_awesome</span>
-                            AI Diagnostic Insights
-                        </h3>
-                        <ul class="risk-list">
-                            <li class="risk-list-item">
-                                <span class="material-symbols-outlined risk-icon-05">psychiatry</span>
-                                <div>
-                                    <p class="risk-copy-text-02">Root Anchoring Stable</p>
-                                    <p class="risk-copy-text-03">Micro-vibration sensors indicate 0.2mm lateral
-                                        displacement under 30km/h winds. Anchoring remains within nominal urban safety
-                                        parameters.</p>
-                                </div>
-                            </li>
-                            <li class="risk-list-item">
-                                <span class="material-symbols-outlined risk-icon-05">water_drop</span>
-                                <div>
-                                    <p class="risk-copy-text-02">Hydration Anomaly Detected</p>
-                                    <p class="risk-copy-text-03">Lower trunk sap flow decreased by 8% over 14 days.
-                                        Model predicts early-stage drought stress or potential fungal interference in
-                                        xylem.</p>
-                                </div>
-                            </li>
-                        </ul>
-                        <button class="risk-button-02">
-                            <span class="material-symbols-outlined">description</span>
-                            Generate Full Sensor Report
-                        </button>
-                    </div>
-                    <!-- Background texture -->
-                    <div class="risk-map-overlay-06"></div>
-                </div>
-            </div>
-            <!-- Footer Details/Metadata -->
-            <div class="risk-map-layer-23">
-                <div class="risk-map-layer-24">
-                    <img class="risk-map-image"
-                        data-alt="Macro close-up of textured oak tree bark showing detailed ridges and natural patterns in soft natural light"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWBFUJ2LAr4WVNi-Hg-GI8SCt6Z9mfShf2EU5M-7XfymA0Wab0amIdnt-dqEVAOVXv27MIHKUrfXhPTP9WC8pW00gL7ZgDAtrXyfq6cypzfXSXIkUFU-pUhRkCKpFAmPiGgp2Mu_RsqBaKEv3Uj14beQ22THkfHJMy_jZQo615v1ZtmqwOYTrQ4f2XTr_ImSLNRb-E2bnwX4qVO89ISmI-fWOrnDmc49VsSkJBjOHcMO7r1j4CaioO7Xc8AkDCthtvF26X6XSRZjA" />
-                    <div>
-                        <h4 class="risk-card-title-03">Species: Quercus Robur</h4>
-                        <p class="risk-copy-text-04">English Oak. Heritage Protected Asset.</p>
-                        <div class="risk-map-layer-25">
-                            <span class="risk-label-heritage">Heritage</span>
-                            <span class="risk-label-urban-core">Urban Core</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="risk-map-layer-26">
-                    <p class="risk-copy-text-05">Last Inspection</p>
-                    <p class="risk-copy-text-06">October 12, 2024</p>
-                    <p class="risk-copy-text-07">Next scheduled drone lidar scan: Nov 28</p>
-                </div>
-            </div>
-        </section>
-    </main>
-    <!-- Footer Component -->
-    <footer class="risk-footer">
-        <div class="risk-footer-group">
-            <span class="risk-label-arbordata-02">ArborData</span>
-            <p class="risk-footer-text">© 2024 ArborData. Digital Forestry &amp; Heritage Management.</p>
-        </div>
-        <nav class="risk-footer-nav">
-            <a class="risk-footer-link" href="#">Privacy Policy</a>
-            <a class="risk-footer-link" href="#">Data Governance</a>
-            <a class="risk-footer-link" href="#">Sensor API</a>
-            <a class="risk-footer-link" href="#">Documentation</a>
-        </nav>
-    </footer>
-</body>
+        </header>
 
+        <main class="risk-page">
+            <section class="panel">
+                <h1 class="page-title">Prédiction d'Âge et Risque de Déracinement</h1>
+                <p class="page-subtitle">Sélectionnez un arbre pour voir les prédictions IA</p>
+                <a class="btn btn-back" href="map.html">← Retour à la visualisation</a>
+            </section>
+
+            <section class="panel tree-selector">
+                <label>Sélectionnez un arbre :</label>
+                <select id="tree-select" class="field">
+                    <option value="">-- Chargement des arbres --</option>
+                </select>
+                <button class="btn" onclick="predictTree()">Prédire</button>
+            </section>
+
+            <div id="loading"></div>
+            
+            <section id="results" class="panel prediction-results" style="display: none;">
+                <!-- Age Prediction -->
+                <div class="prediction-card">
+                    <h3>📊 Prédiction d'Âge</h3>
+                    <div class="prediction-value" id="age-result">--</div>
+                    <div class="confidence" id="age-confidence"></div>
+                </div>
+
+                <!-- Risk Prediction -->
+                <div class="prediction-card">
+                    <h3>⚠️ Risque de Déracinement</h3>
+                    <div class="prediction-value" id="risk-result">--</div>
+                    <div class="confidence" id="risk-confidence"></div>
+                </div>
+
+                <!-- Tree Info -->
+                <div class="prediction-card" style="grid-column: 1 / -1;">
+                    <h3>Informations de l'Arbre</h3>
+                    <p><strong>Espèce:</strong> <span id="tree-espece">--</span></p>
+                    <p><strong>Hauteur:</strong> <span id="tree-hauteur">--</span>m</p>
+                    <p><strong>Diamètre du tronc:</strong> <span id="tree-diametre">--</span>cm</p>
+                    <p><strong>État:</strong> <span id="tree-etat">--</span></p>
+                    <p><strong>Quartier:</strong> <span id="tree-quartier">--</span></p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script defer src="js/risk-page.js"></script>
+</body>
 </html>

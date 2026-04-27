@@ -32,10 +32,15 @@ function insertSampleData(): void
         $stmt->execute([':libelle' => 'Evase']);
         $portId = (int) $pdo->lastInsertId();
 
-        $stmt = $pdo->prepare('INSERT INTO LOCALISATION (quartier, secteur) VALUES (:quartier, :secteur)');
+        $stmt = $pdo->prepare(
+            'INSERT INTO LOCALISATION (quartier, secteur, longitude, latitude)
+             VALUES (:quartier, :secteur, :longitude, :latitude)'
+        );
         $stmt->execute([
             ':quartier' => 'Centre-ville',
             ':secteur' => 'Secteur A',
+            ':longitude' => 2.3522,
+            ':latitude' => 48.8566,
         ]);
         $localisationId = (int) $pdo->lastInsertId();
 

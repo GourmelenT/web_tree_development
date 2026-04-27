@@ -61,48 +61,23 @@ function normalizeDbHost(string $host): string
     return rtrim($host, '/');
 }
 
-function resolveSqlitePath(string $sqlitePath): string
-{
-    $trimmedPath = trim($sqlitePath);
-    if ($trimmedPath === '') {
-        return __DIR__ . '/database.sqlite';
-    }
-
-    $isWindowsAbsolute = (bool) preg_match('/^[A-Za-z]:[\\\\\/]/', $trimmedPath);
-    $isUnixAbsolute = strpos($trimmedPath, '/') === 0;
-
-    if ($isWindowsAbsolute || $isUnixAbsolute) {
-        return $trimmedPath;
-    }
-
-    return __DIR__ . '/' . ltrim($trimmedPath, './\\');
-}
-
 function getDbConfig(): array
 {
     // charge variable depuis .env
     loadEnvFile(__DIR__ . '/.env');
 
-    $sqlitePath = resolveSqlitePath((string) (getenv('SQLITE_PATH') ?: 'database.sqlite'));
-
     return [
-        'driver' => strtolower(getenv('DB_DRIVER') ?: 'sqlite'),
         'host' => normalizeDbHost(getenv('DB_HOST') ?: '127.0.0.1'),
         'port' => getenv('DB_PORT') ?: '3306',
-        'db_name' => getenv('DB_NAME') ?: 'web_tree_development',
+        'db_name' => getenv('DB_NAME') ?: 'grp1tr3',
         'user' => getenv('DB_USER') ?: 'root',
-        'password' => getenv('DB_PASSWORD') ?: '',
-        'sqlite_path' => $sqlitePath,
+        'password' => (($password = getenv('DB_PASSWORD')) === false) ? '' : $password,
     ];
 }
 
 function getServerConnection(): PDO
 {
     $config = getDbConfig();
-
-    if ($config['driver'] !== 'mysql') {
-        throw new RuntimeException('connexion serveur dispo uniquement en mysql');
-    }
 
     $dsn = "mysql:host={$config['host']};port={$config['port']};charset=utf8mb4";
 
@@ -122,27 +97,6 @@ function getConnection(): PDO
     $config = getDbConfig();
 
     try {
-        if ($config['driver'] === 'sqlite') {
-            $sqlitePath = $config['sqlite_path'];
-            $sqliteDir = dirname($sqlitePath);
-            if (!is_dir($sqliteDir)) {
-                mkdir($sqliteDir, 0777, true);
-            }
-
-            $pdo = new PDO("sqlite:{$sqlitePath}", null, null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
-            $pdo->exec('PRAGMA foreign_keys = ON');
-
-            return $pdo;
-        }
-
-        if ($config['driver'] !== 'mysql') {
-            throw new RuntimeException('driver non supporte: ' . $config['driver']);
-        }
-
         $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['db_name']};charset=utf8mb4";
         $pdo = new PDO($dsn, $config['user'], $config['password'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -152,10 +106,6 @@ function getConnection(): PDO
 
         return $pdo;
     } catch (PDOException $e) {
-        if ($config['driver'] === 'sqlite') {
-            throw new RuntimeException('Erreur de connexion SQLite: ' . $e->getMessage(), 0, $e);
-        }
-
         throw new RuntimeException('Erreur de connexion MySQL: ' . $e->getMessage(), 0, $e);
     }
 }

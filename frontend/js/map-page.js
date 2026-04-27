@@ -6,13 +6,26 @@ const etatSelect = document.getElementById('filter-etat');
 const refreshBtn = document.getElementById('btn-refresh');
 
 let allRows = [];
+const MAX_MAP_POINTS = 8000;
 
 function getApiCandidates(endpoint) {
+  const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
+
+  if (window.location.protocol === 'file:') {
+    return [
+      `http://localhost:8000/api/${normalizedEndpoint}`,
+      `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
+      `http://localhost:8080/api/${normalizedEndpoint}`,
+      `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
+    ];
+  }
+
   return [
-    `../backend/api/${endpoint}`,
-    `../api/${endpoint}`,
-    `/backend/api/${endpoint}`,
-    `/api/${endpoint}`,
+    `../backend/api/${normalizedEndpoint}`,
+    `../api/${normalizedEndpoint}`,
+    `/backend/api/${normalizedEndpoint}`,
+    `/api/${normalizedEndpoint}`,
+    `${window.location.origin}/api/${normalizedEndpoint}`,
   ];
 }
 
@@ -39,6 +52,68 @@ async function fetchApiJson(endpoint, init = {}) {
 function safeNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function isValidWgs84(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
+function mercatorToWgs84(x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return null;
+  }
+
+  // Valid WebMercator bounds in meters
+  if (Math.abs(x) > 20037508.34 || Math.abs(y) > 20037508.34) {
+    return null;
+  }
+
+  const lon = (x / 20037508.34) * 180;
+  let lat = (y / 20037508.34) * 180;
+  lat =
+    (180 / Math.PI) *
+    (2 * Math.atan(Math.exp((lat * Math.PI) / 180)) - Math.PI / 2);
+
+  if (!isValidWgs84(lat, lon)) {
+    return null;
+  }
+
+  return { lat, lon };
+}
+
+function normalizeGeoPoint(row) {
+  const rawLat = Number(row?.latitude);
+  const rawLon = Number(row?.longitude);
+
+  if (isValidWgs84(rawLat, rawLon)) {
+    return { lat: rawLat, lon: rawLon };
+  }
+
+  if (isValidWgs84(rawLon, rawLat)) {
+    return { lat: rawLon, lon: rawLat };
+  }
+
+  // Common case with projected meters in DB: longitude=x and latitude=y
+  const converted = mercatorToWgs84(rawLon, rawLat);
+  if (converted) {
+    return converted;
+  }
+
+  return null;
+}
+
+function downsampleRows(rows, maxPoints) {
+  if (!Array.isArray(rows) || rows.length <= maxPoints) {
+    return rows;
+  }
+
+  const step = Math.ceil(rows.length / maxPoints);
+  const sampled = [];
+  for (let i = 0; i < rows.length; i += step) {
+    sampled.push(rows[i]);
+  }
+
+  return sampled;
 }
 
 function renderTableRows(rows) {
@@ -70,28 +145,43 @@ function renderTableRows(rows) {
 
 function renderPlotlyMap(rows) {
   const container = document.getElementById('arbres-map-plot');
-  if (!container || typeof Plotly === 'undefined') return;
+  if (!container) return;
 
-  const validRows = rows.filter((r) => Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)));
-  const center = validRows.length
+  if (typeof Plotly === 'undefined') {
+    if (mapStatus) {
+      mapStatus.textContent = 'erreur: librairie carte indisponible (Plotly non charge)';
+    }
+    return;
+  }
+
+  const normalizedRows = rows
+    .map((r) => {
+      const point = normalizeGeoPoint(r);
+      return point ? { ...r, _lat: point.lat, _lon: point.lon } : null;
+    })
+    .filter(Boolean);
+
+  const sampledRows = downsampleRows(normalizedRows, MAX_MAP_POINTS);
+
+  const center = sampledRows.length
     ? {
-        lat: validRows.reduce((sum, r) => sum + Number(r.latitude), 0) / validRows.length,
-        lon: validRows.reduce((sum, r) => sum + Number(r.longitude), 0) / validRows.length,
+        lat: sampledRows.reduce((sum, r) => sum + Number(r._lat), 0) / sampledRows.length,
+        lon: sampledRows.reduce((sum, r) => sum + Number(r._lon), 0) / sampledRows.length,
       }
     : { lat: 49.8489, lon: 3.2870 };
 
   const trace = {
     type: 'scattermapbox',
     mode: 'markers',
-    lon: validRows.map((r) => Number(r.longitude)),
-    lat: validRows.map((r) => Number(r.latitude)),
-    text: validRows.map(
+    lon: sampledRows.map((r) => Number(r._lon)),
+    lat: sampledRows.map((r) => Number(r._lat)),
+    text: sampledRows.map(
       (r) => `${r.espece}<br>quartier: ${r.quartier}<br>etat: ${r.etat}<br>h totale: ${safeNumber(r.hauteur_totale).toFixed(1)} m`
     ),
     hovertemplate: '%{text}<extra></extra>',
     marker: {
       size: 8,
-      color: validRows.map((r) => (safeNumber(r.remarquable) ? '#2f8f4e' : '#1e6f3a')),
+      color: sampledRows.map((r) => (safeNumber(r.remarquable) ? '#2f8f4e' : '#1e6f3a')),
       opacity: 0.85,
     },
   };
@@ -105,7 +195,23 @@ function renderPlotlyMap(rows) {
     },
   };
 
-  Plotly.newPlot(container, [trace], layout, { responsive: true, displayModeBar: false });
+  try {
+    Plotly.react(container, [trace], layout, { responsive: true, displayModeBar: false });
+
+    if (mapStatus) {
+      if (!normalizedRows.length) {
+        mapStatus.textContent = 'carte chargee (aucune coordonnee exploitable)';
+      } else if (normalizedRows.length !== rows.length) {
+        mapStatus.textContent = `carte chargee (${normalizedRows.length}/${rows.length} coordonnees valides)`;
+      } else if (sampledRows.length !== normalizedRows.length) {
+        mapStatus.textContent = `carte chargee (${sampledRows.length} points affiches sur ${normalizedRows.length})`;
+      }
+    }
+  } catch (error) {
+    if (mapStatus) {
+      mapStatus.textContent = `erreur rendu carte: ${error.message}`;
+    }
+  }
 }
 
 function applyFilters() {

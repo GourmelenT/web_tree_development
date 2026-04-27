@@ -2,11 +2,23 @@ const form = document.querySelector('.add-tree-form');
 const feedback = document.getElementById('form-feedback');
 
 function getApiCandidates(endpoint) {
+  const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
+
+  if (window.location.protocol === 'file:') {
+    return [
+      `http://localhost:8000/api/${normalizedEndpoint}`,
+      `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
+      `http://localhost:8080/api/${normalizedEndpoint}`,
+      `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
+    ];
+  }
+
   return [
-    `../backend/api/${endpoint}`,
-    `../api/${endpoint}`,
-    `/backend/api/${endpoint}`,
-    `/api/${endpoint}`,
+    `../backend/api/${normalizedEndpoint}`,
+    `../api/${normalizedEndpoint}`,
+    `/backend/api/${normalizedEndpoint}`,
+    `/api/${normalizedEndpoint}`,
+    `${window.location.origin}/api/${normalizedEndpoint}`,
   ];
 }
 

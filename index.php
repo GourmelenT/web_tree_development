@@ -35,24 +35,6 @@ if (preg_match('#^/api/#', $requested)) {
     }
 }
 
-// Original route handling
-$route = $_GET['route'] ?? '';
-if (is_string($route) && $route !== '') {
-    switch ($route) {
-        case 'get_arbres':
-            require __DIR__ . '/backend/get_arbres.php';
-            exit;
-
-        case 'add_arbre':
-            require __DIR__ . '/backend/add_arbre.php';
-            exit;
-
-        case 'options':
-            require __DIR__ . '/backend/api/options.php';
-            exit;
-    }
-}
-
 // Default redirect to index
 if ($requested === '/' || $requested === '') {
     header('Location: /index.html', true, 302);

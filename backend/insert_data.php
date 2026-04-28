@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db_connection.php';
 
+// Valeurs de reference minimales pour les tables de labels.
 const REFERENCE_LABELS = [
     'ETAT' => [
         'ABATTU',
@@ -51,6 +52,7 @@ const REFERENCE_LABELS = [
     ],
 ];
 
+// Nettoie une chaine (sans accent, uppercase) pour matcher les labels.
 function upperNoAccent(string $value): string
 {
     $trimmed = trim($value);
@@ -69,6 +71,7 @@ function upperNoAccent(string $value): string
     return strtoupper(trim($collapsed));
 }
 
+// Nettoyage texte libre + valeur par defaut si vide/NA.
 function cleanText(?string $value, string $default = 'inconnu'): string
 {
     if ($value === null) {
@@ -83,6 +86,7 @@ function cleanText(?string $value, string $default = 'inconnu'): string
     return $trimmed;
 }
 
+// Nettoyage label categoriquement compare (version uppercase/no accent).
 function cleanLabel(?string $value, string $default = 'INCONNU'): string
 {
     if ($value === null) {
@@ -97,6 +101,7 @@ function cleanLabel(?string $value, string $default = 'INCONNU'): string
     return $cleaned;
 }
 
+// Parse float robuste (virgule ou point), fallback 0.
 function toFloatOrZero(?string $value): float
 {
     $clean = cleanText($value, '0');
@@ -104,18 +109,21 @@ function toFloatOrZero(?string $value): float
     return is_numeric($clean) ? (float) $clean : 0.0;
 }
 
+// Parse int robuste, fallback 0.
 function toIntOrZero(?string $value): int
 {
     $clean = cleanText($value, '0');
     return is_numeric($clean) ? (int) $clean : 0;
 }
 
+// Convertit differents formats booleens vers 0/1.
 function toBoolInt(?string $value): int
 {
     $clean = strtolower(cleanText($value, 'non'));
     return in_array($clean, ['oui', 'yes', '1', 'true'], true) ? 1 : 0;
 }
 
+// Convertit une date texte en format SQL YYYY-mm-dd.
 function toSqlDate(?string $value): string
 {
     $clean = cleanText($value, '');
@@ -132,6 +140,7 @@ function toSqlDate(?string $value): string
     return date('Y-m-d', $timestamp);
 }
 
+// Helper generic: prend un id en cache, sinon SELECT, sinon INSERT.
 function getOrCreateId(PDO $pdo, array &$cache, string $cacheKey, string $selectSql, string $insertSql, array $params): int
 {
     if (isset($cache[$cacheKey])) {
@@ -155,7 +164,7 @@ function getOrCreateId(PDO $pdo, array &$cache, string $cacheKey, string $select
 
 function resetTables(PDO $pdo): void
 {
-    // raz pour eviter les doublons
+    // RAZ complete pour eviter les doublons avant nouvel import.
     $pdo->exec('DELETE FROM possede');
     $pdo->exec('DELETE FROM ARBRE');
     $pdo->exec('DELETE FROM est_de_type');
@@ -169,6 +178,7 @@ function resetTables(PDO $pdo): void
     $pdo->exec('DELETE FROM SITUATION');
 }
 
+// Re-injecte les labels de reference utilises dans les selects du front.
 function seedReferenceLabels(PDO $pdo): void
 {
     foreach (REFERENCE_LABELS as $table => $labels) {
@@ -179,6 +189,7 @@ function seedReferenceLabels(PDO $pdo): void
     }
 }
 
+// Tente de garder la valeur CSV si compatible, sinon prend une valeur reference.
 function pickReferenceLabel(string $table, ?string $rawValue): string
 {
     $allowed = REFERENCE_LABELS[$table] ?? [];
@@ -198,6 +209,7 @@ function pickReferenceLabel(string $table, ?string $rawValue): string
     return $allowed[array_rand($allowed)];
 }
 
+// Charge toutes les lignes du CSV puis en tire un echantillon aleatoire.
 function pickRandomRowsFromCsv($handle, int $limit): array
 {
     $rows = [];
@@ -214,12 +226,14 @@ function pickRandomRowsFromCsv($handle, int $limit): array
     return array_slice($rows, 0, $limit);
 }
 
+// Pipeline principal: lit CSV + reset + remplit toutes les tables relationnelles.
 function insertCsvData(string $csvPath): void
 {
     if (!is_file($csvPath)) {
         throw new RuntimeException('fichier data_clean.csv introuvable');
     }
 
+    // Connexion DB + ouverture du CSV.
     $pdo = getConnection();
     $handle = fopen($csvPath, 'r');
     if ($handle === false) {
@@ -227,11 +241,12 @@ function insertCsvData(string $csvPath): void
     }
 
     try {
-        // debut transac
+        // Debut transaction: tout ou rien.
         $pdo->beginTransaction();
         resetTables($pdo);
         seedReferenceLabels($pdo);
 
+        // Lecture de l'entete pour mapper les index de colonnes.
         $header = fgetcsv($handle, 0, ',', '"', '\\');
         if ($header === false) {
             throw new RuntimeException('csv vide ou header invalide');
@@ -242,6 +257,7 @@ function insertCsvData(string $csvPath): void
             $indexByName[trim((string) $name)] = $idx;
         }
 
+        // Colonnes minimales attendues pour un import coherent.
         $required = [
             'X', 'Y', 'clc_quartier', 'clc_secteur', 'haut_tot', 'haut_tronc',
             'tronc_diam', 'fk_arb_etat', 'fk_stadedev', 'fk_port', 'fk_pied',
@@ -254,6 +270,7 @@ function insertCsvData(string $csvPath): void
             }
         }
 
+        // Caches memo pour limiter les SELECT/INSERT repetitifs.
         $cacheFeuillage = [];
         $cacheEspece = [];
         $cacheEtat = [];
@@ -264,6 +281,7 @@ function insertCsvData(string $csvPath): void
         $cacheLoc = [];
         $linksEspeceFeuillage = [];
 
+        // Requetes preparees reutilisees dans la boucle.
         $insertArbre = $pdo->prepare(
             'INSERT INTO ARBRE (
                 hauteur_tronc, hauteur_totale, diametre_tronc, remarquable,
@@ -280,14 +298,17 @@ function insertCsvData(string $csvPath): void
         $insertType = $pdo->prepare('INSERT INTO est_de_type (id_feuillage, id_espece) VALUES (:id_feuillage, :id_espece)');
 
         $count = 0;
+        // Ici on ne garde que 5 lignes aleatoires du CSV.
         $selectedRows = pickRandomRowsFromCsv($handle, 5);
 
         foreach ($selectedRows as $row) {
+            // Champs geo/contexte.
             $quartier = cleanText($row[$indexByName['clc_quartier']] ?? null);
             $secteur = cleanText($row[$indexByName['clc_secteur']] ?? null);
             $longitude = toFloatOrZero($row[$indexByName['X']] ?? null);
             $latitude = toFloatOrZero($row[$indexByName['Y']] ?? null);
 
+            // Champs categories (normalises pour matcher les tables de refs).
             $feuillageLib = cleanLabel($row[$indexByName['feuillage']] ?? null, 'INCONNU');
             $nomLatin = cleanLabel($row[$indexByName['nomlatin']] ?? null, 'INCONNU');
             $etatLib = pickReferenceLabel('ETAT', $row[$indexByName['fk_arb_etat']] ?? null);
@@ -296,6 +317,7 @@ function insertCsvData(string $csvPath): void
             $piedLib = pickReferenceLabel('PIED', $row[$indexByName['fk_pied']] ?? null);
             $situationLib = pickReferenceLabel('SITUATION', $row[$indexByName['fk_situation']] ?? null);
 
+            // Dates: fallback date du jour si non parseable.
             $dateEdited = toSqlDate($row[$indexByName['last_edited_date']] ?? null);
             $datePlantation = toSqlDate($row[$indexByName['dte_plantation']] ?? null);
             if ($dateEdited === '') {
@@ -305,6 +327,7 @@ function insertCsvData(string $csvPath): void
                 $datePlantation = $dateEdited;
             }
 
+            // Get-or-create des dimensions de reference + espece.
             $feuillageId = getOrCreateId(
                 $pdo,
                 $cacheFeuillage,
@@ -368,6 +391,7 @@ function insertCsvData(string $csvPath): void
                 [':libelle' => $situationLib]
             );
 
+            // La localisation est unique par quartet quartier/secteur/lon/lat.
             $locKey = $quartier . '|' . $secteur . '|' . $longitude . '|' . $latitude;
             $localisationId = getOrCreateId(
                 $pdo,
@@ -383,6 +407,7 @@ function insertCsvData(string $csvPath): void
                 ]
             );
 
+            // Evite de recreer le meme lien espece<->feuillage.
             $typeKey = $feuillageId . '-' . $especeId;
             if (!isset($linksEspeceFeuillage[$typeKey])) {
                 $insertType->execute([
@@ -392,6 +417,7 @@ function insertCsvData(string $csvPath): void
                 $linksEspeceFeuillage[$typeKey] = true;
             }
 
+            // Insert ligne ARBRE principale.
             $insertArbre->execute([
                 ':hauteur_tronc' => toFloatOrZero($row[$indexByName['haut_tronc']] ?? null),
                 ':hauteur_totale' => toFloatOrZero($row[$indexByName['haut_tot']] ?? null),
@@ -409,6 +435,7 @@ function insertCsvData(string $csvPath): void
                 ':id_localisation' => $localisationId,
             ]);
 
+            // Insert table de liaison situation<->arbre.
             $arbreId = (int) $pdo->lastInsertId();
             $insertPossede->execute([
                 ':id_situation' => $situationId,
@@ -418,9 +445,11 @@ function insertCsvData(string $csvPath): void
             $count++;
         }
 
+        // Validation finale de toute la transaction.
         $pdo->commit();
         echo "donnees csv inserees: {$count}" . PHP_EOL;
     } catch (Throwable $e) {
+        // En cas d'erreur: annule tout l'import pour garder une base propre.
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
@@ -432,6 +461,7 @@ function insertCsvData(string $csvPath): void
     }
 }
 
+// Point d'entree CLI: php backend/insert_data.php
 if (PHP_SAPI === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     insertCsvData(__DIR__ . '/data_clean.csv');
 }

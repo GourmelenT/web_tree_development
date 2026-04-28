@@ -13,7 +13,7 @@
 <body>
     <div class="site-shell">
         <header class="topbar">
-            <div class="brand">ArborData</div>
+            <div class="brand"><a href="index.html">ArborData</a></div>
             <nav class="nav">
                 <a href="index.html">Accueil</a>
                 <a href="add.html">Ajouter un arbre</a>
@@ -31,11 +31,11 @@
             </section>
 
             <section class="panel tree-selector">
-                <label>Sélectionnez un arbre :</label>
-                <select id="tree-select" class="field">
+                <label for="tree-select" class="tree-selector-label">Sélectionnez un arbre :</label>
+                <select id="tree-select" class="tree-selector-select">
                     <option value="">-- Chargement des arbres --</option>
                 </select>
-                <button class="btn" onclick="predictTree()">Prédire</button>
+                <button class="btn btn-primary" onclick="predictTree()">Prédire</button>
             </section>
 
             <div id="loading"></div>

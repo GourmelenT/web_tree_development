@@ -98,12 +98,57 @@ const clusterNames = {
 };
 
 // Récupérer les prédictions de clusters
+function getApiCandidates(endpoint) {
+    const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
+
+    if (window.location.protocol === 'file:') {
+        return [
+            `http://localhost:8000/api/${normalizedEndpoint}`,
+            `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
+            `http://localhost:8080/api/${normalizedEndpoint}`,
+            `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
+        ];
+    }
+
+    return [
+        `../backend/api/${normalizedEndpoint}`,
+        `../api/${normalizedEndpoint}`,
+        `/backend/api/${normalizedEndpoint}`,
+        `/api/${normalizedEndpoint}`,
+        `${window.location.origin}/api/${normalizedEndpoint}`,
+    ];
+}
+
+async function fetchApiJson(endpoint, init = {}) {
+    let lastError = null;
+
+    for (const url of getApiCandidates(endpoint)) {
+        try {
+            const response = await fetch(url, init);
+            if (response.status === 404) {
+                continue;
+            }
+
+            const payload = await response.json();
+            return { response, payload };
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error('API introuvable');
+}
+
+function safeNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
 async function loadClusterPredictions() {
     try {
-        const response = await fetch('/api/predict_clusters.php');
+        const { response, payload: result } = await fetchApiJson('predict_clusters.php');
         if (!response.ok) throw new Error('API error: ' + response.status);
-        
-        const result = await response.json();
+
         if (!result.success) throw new Error(result.message || 'Erreur de prédiction');
         
         return result.data || [];
@@ -231,8 +276,8 @@ function displayClusterTable(arbres) {
                 <td>${arbre.hauteur_totale}</td>
                 <td>${arbre.diametre_tronc}</td>
                 <td><span style="background: ${clusterColors[cluster]}; color: white; padding: 2px 6px; border-radius: 3px;">${cluster}</span></td>
-                <td>${arbre.latitude.toFixed(2)}</td>
-                <td>${arbre.longitude.toFixed(2)}</td>
+                <td>${safeNumber(arbre.latitude).toFixed(2)}</td>
+                <td>${safeNumber(arbre.longitude).toFixed(2)}</td>
             </tr>
         `;
     }).join('');

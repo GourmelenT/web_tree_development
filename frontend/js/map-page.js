@@ -6,6 +6,8 @@ const etatSelect = document.getElementById('filter-etat');
 const refreshBtn = document.getElementById('btn-refresh');
 
 let allRows = [];
+let selectedTreeId = null;
+const deletingTreeIds = new Set();
 const MAX_MAP_POINTS = 8000;
 
 function getApiCandidates(endpoint) {
@@ -52,6 +54,15 @@ async function fetchApiJson(endpoint, init = {}) {
 function safeNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function isValidWgs84(lat, lon) {
@@ -147,6 +158,11 @@ function downsampleRows(rows, maxPoints) {
     sampled.push(rows[i]);
   }
 
+  const selectedRow = rows.find((row) => Number(row.id_arbre) === selectedTreeId);
+  if (selectedRow && !sampled.some((row) => Number(row.id_arbre) === selectedTreeId)) {
+    sampled.push(selectedRow);
+  }
+
   return sampled;
 }
 
@@ -155,23 +171,40 @@ function renderTableRows(rows) {
   tableBody.innerHTML = '';
 
   rows.forEach((arbre) => {
+    const idArbre = Number(arbre.id_arbre);
+    const isDeleting = deletingTreeIds.has(idArbre);
+    const isSelected = selectedTreeId === idArbre;
     const tr = document.createElement('tr');
+    tr.dataset.treeId = String(idArbre);
+    if (isSelected) {
+      tr.classList.add('is-selected');
+    }
     tr.innerHTML = `
-      <td>${arbre.id_arbre}</td>
-      <td>${arbre.espece}</td>
-      <td>${arbre.quartier}</td>
-      <td>${arbre.type}</td>
+      <td>${escapeHtml(arbre.id_arbre)}</td>
+      <td>${escapeHtml(arbre.espece)}</td>
+      <td>${escapeHtml(arbre.quartier)}</td>
+      <td>${escapeHtml(arbre.type)}</td>
       <td>${safeNumber(arbre.hauteur_totale).toFixed(1)}</td>
       <td>${safeNumber(arbre.hauteur_tronc).toFixed(1)}</td>
       <td>${safeNumber(arbre.diametre_tronc).toFixed(1)}</td>
       <td>${safeNumber(arbre.remarquable) ? 'Oui' : 'Non'}</td>
       <td>${safeNumber(arbre.latitude).toFixed(5)}</td>
       <td>${safeNumber(arbre.longitude).toFixed(5)}</td>
-      <td>${arbre.etat}</td>
-      <td>${arbre.stade_developpement}</td>
-      <td>${arbre.port}</td>
-      <td>${arbre.pied}</td>
+      <td>${escapeHtml(arbre.etat)}</td>
+      <td>${escapeHtml(arbre.stade_developpement)}</td>
+      <td>${escapeHtml(arbre.port)}</td>
+      <td>${escapeHtml(arbre.pied)}</td>
       <td>${safeNumber(arbre.age_estime)}</td>
+      <td>
+        <button
+          class="btn btn-danger btn-delete-tree"
+          type="button"
+          data-tree-id="${idArbre}"
+          ${isDeleting ? 'disabled' : ''}
+        >
+          ${isDeleting ? 'Suppression...' : 'Supprimer'}
+        </button>
+      </td>
     `;
     tableBody.appendChild(tr);
   });
@@ -209,13 +242,18 @@ function renderPlotlyMap(rows) {
     mode: 'markers',
     lon: sampledRows.map((r) => Number(r._lon)),
     lat: sampledRows.map((r) => Number(r._lat)),
+    customdata: sampledRows.map((r) => Number(r.id_arbre)),
     text: sampledRows.map(
-      (r) => `${r.espece}<br>Quartier : ${r.quartier}<br>Etat : ${r.etat}<br>H totale : ${safeNumber(r.hauteur_totale).toFixed(1)} m`
+      (r) =>
+        `${escapeHtml(r.espece)}<br>Quartier : ${escapeHtml(r.quartier)}<br>Etat : ${escapeHtml(r.etat)}<br>H totale : ${safeNumber(r.hauteur_totale).toFixed(1)} m`
     ),
     hovertemplate: '%{text}<extra></extra>',
     marker: {
-      size: 8,
-      color: sampledRows.map((r) => (safeNumber(r.remarquable) ? '#2f8f4e' : '#1e6f3a')),
+      size: sampledRows.map((r) => (Number(r.id_arbre) === selectedTreeId ? 15 : 8)),
+      color: sampledRows.map((r) => {
+        if (Number(r.id_arbre) === selectedTreeId) return '#b42318';
+        return safeNumber(r.remarquable) ? '#2f8f4e' : '#1e6f3a';
+      }),
       opacity: 0.85,
     },
   };
@@ -239,6 +277,8 @@ function renderPlotlyMap(rows) {
     if (mapStatus) {
       if (!normalizedRows.length) {
         mapStatus.textContent = 'Carte chargee (aucune coordonnee exploitable)';
+      } else if (selectedTreeId && sampledRows.some((r) => Number(r.id_arbre) === selectedTreeId)) {
+        mapStatus.textContent = `Arbre #${selectedTreeId} selectionne sur la carte`;
       } else if (normalizedRows.length !== rows.length) {
         mapStatus.textContent = `Carte chargee (${normalizedRows.length}/${rows.length} coordonnees valides)`;
       } else if (sampledRows.length !== normalizedRows.length) {
@@ -252,6 +292,43 @@ function renderPlotlyMap(rows) {
   }
 }
 
+async function deleteTree(idArbre) {
+  const tree = allRows.find((row) => Number(row.id_arbre) === Number(idArbre));
+  if (!tree || deletingTreeIds.has(Number(idArbre))) return;
+
+  const location = tree.quartier ? ` (${tree.quartier})` : '';
+  const confirmed = window.confirm(`Supprimer l'arbre #${idArbre} - ${tree.espece}${location} ?`);
+  if (!confirmed) return;
+
+  deletingTreeIds.add(Number(idArbre));
+  if (mapStatus) mapStatus.textContent = `Suppression de l'arbre #${idArbre}...`;
+  applyFilters();
+
+  try {
+    const { response, payload } = await fetchApiJson(`arbres.php?id_arbre=${encodeURIComponent(idArbre)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'Erreur suppression arbre');
+    }
+
+    allRows = allRows.filter((row) => Number(row.id_arbre) !== Number(idArbre));
+    fillEtatFilter(allRows);
+    applyFilters();
+
+    if (mapStatus) {
+      mapStatus.textContent = `Arbre #${idArbre} supprime`;
+    }
+  } catch (error) {
+    if (mapStatus) mapStatus.textContent = `Erreur suppression : ${error.message}`;
+    applyFilters();
+  } finally {
+    deletingTreeIds.delete(Number(idArbre));
+    applyFilters();
+  }
+}
+
 function applyFilters() {
   const search = (searchInput?.value || '').trim().toLowerCase();
   const etat = etatSelect?.value || '';
@@ -261,6 +338,10 @@ function applyFilters() {
     const byEtat = !etat || row.etat === etat;
     return bySearch && byEtat;
   });
+
+  if (selectedTreeId && !filtered.some((row) => Number(row.id_arbre) === selectedTreeId)) {
+    selectedTreeId = null;
+  }
 
   renderTableRows(filtered);
   renderPlotlyMap(filtered);
@@ -300,5 +381,18 @@ async function loadArbres() {
 searchInput?.addEventListener('input', applyFilters);
 etatSelect?.addEventListener('change', applyFilters);
 refreshBtn?.addEventListener('click', loadArbres);
+tableBody?.addEventListener('click', (event) => {
+  const button = event.target.closest('.btn-delete-tree');
+  if (button) {
+    deleteTree(Number(button.dataset.treeId));
+    return;
+  }
+
+  const row = event.target.closest('tr[data-tree-id]');
+  if (!row) return;
+
+  selectedTreeId = Number(row.dataset.treeId);
+  applyFilters();
+});
 
 loadArbres();

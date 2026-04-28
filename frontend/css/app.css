@@ -311,6 +311,21 @@ a {
   background: var(--accent-dark);
 }
 
+.btn-danger {
+  background: #fdf0ed;
+  color: var(--danger);
+  border: 1px solid #f3c8c1;
+}
+
+.btn-danger:hover {
+  background: #fde2dd;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .btn-soft {
   background: #edf6ef;
   color: var(--accent-dark);
@@ -491,6 +506,15 @@ td {
 th {
   color: var(--muted);
   font-weight: 700;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr.is-selected {
+  background: #fff3ef;
+  box-shadow: inset 4px 0 0 var(--danger);
 }
 
 .hero {

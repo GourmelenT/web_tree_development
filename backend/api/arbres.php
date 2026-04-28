@@ -158,6 +158,57 @@ function createArbre(PDO $pdo): void
     }
 }
 
+function deleteArbre(PDO $pdo): void
+{
+    $idArbre = (int) ($_GET['id_arbre'] ?? 0);
+
+    if ($idArbre <= 0) {
+        sendJsonResponse(400, [
+            'success' => false,
+            'message' => 'id_arbre invalide',
+        ]);
+    }
+
+    $pdo->beginTransaction();
+
+    try {
+        $existsStmt = $pdo->prepare('SELECT id_arbre FROM ARBRE WHERE id_arbre = :id_arbre LIMIT 1');
+        $existsStmt->execute([':id_arbre' => $idArbre]);
+
+        if ($existsStmt->fetchColumn() === false) {
+            $pdo->rollBack();
+            sendJsonResponse(404, [
+                'success' => false,
+                'message' => 'arbre non trouve',
+            ]);
+        }
+
+        $linkStmt = $pdo->prepare('DELETE FROM possede WHERE id_arbre = :id_arbre');
+        $linkStmt->execute([':id_arbre' => $idArbre]);
+
+        $treeStmt = $pdo->prepare('DELETE FROM ARBRE WHERE id_arbre = :id_arbre');
+        $treeStmt->execute([':id_arbre' => $idArbre]);
+
+        $pdo->commit();
+
+        sendJsonResponse(200, [
+            'success' => true,
+            'message' => 'arbre supprime avec succes',
+            'id_arbre' => $idArbre,
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        sendJsonResponse(500, [
+            'success' => false,
+            'message' => 'erreur suppression arbre',
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
+
 try {
     $pdo = getConnection();
 
@@ -167,6 +218,10 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         createArbre($pdo);
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        deleteArbre($pdo);
     }
 
     sendJsonResponse(405, [

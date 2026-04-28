@@ -179,6 +179,7 @@ function updateReview() {
     <strong>Quartier :</strong> ${normalizeDisplayValue(document.getElementById('quartier')?.value)}<br>
     <strong>Secteur :</strong> ${normalizeDisplayValue(document.getElementById('secteur')?.value)}<br>
     <strong>Situation :</strong> ${normalizeDisplayValue(document.getElementById('situation')?.value)}<br>
+    <strong>Age estime :</strong> ${normalizeDisplayValue(document.getElementById('age_estime')?.value || '0')} ans<br>
     <strong>Remarquable :</strong> ${remarkable}
   `;
 }
@@ -334,6 +335,7 @@ if (form) {
       quartier: document.getElementById('quartier')?.value ?? '',
       secteur: document.getElementById('secteur')?.value ?? '',
       situation: document.getElementById('situation')?.value ?? 'Alignement',
+      age_estime: Number(document.getElementById('age_estime')?.value) || 0,
     };
 
     try {

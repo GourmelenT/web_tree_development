@@ -64,6 +64,7 @@ function createArbre(PDO $pdo): void
     $quartier = normalizeText((string) ($data['quartier'] ?? 'inconnu'));
     $secteur = normalizeText((string) ($data['secteur'] ?? 'inconnu'));
     $situation = normalizeText((string) ($data['situation'] ?? 'Alignement'));
+    $ageEstime = max(0, (int) ($data['age_estime'] ?? 0));
 
     $dateEdited = date('Y-m-d');
     $datePlantation = normalizeText((string) ($data['date_plantation'] ?? ''), $dateEdited);
@@ -123,7 +124,7 @@ function createArbre(PDO $pdo): void
             ':diametre_tronc' => $diametreTronc,
             ':remarquable' => $remarquable,
             ':date_plantation' => $datePlantation,
-            ':age_estime' => 0,
+            ':age_estime' => $ageEstime,
             ':cluster_prediction' => 0,
             ':date_edited' => $dateEdited,
             ':id_espece' => $especeId,

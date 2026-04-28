@@ -72,6 +72,8 @@ def load_model():
     
     print("Chargement du modèle...")
     model = joblib.load("model.pkl")
+    if hasattr(model, "named_steps") and "model" in model.named_steps:
+        model.named_steps["model"].set_params(n_jobs=1)
     print("Modèle chargé")
     return model
 

@@ -14,201 +14,128 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     exit;
 }
 
-function sendJsonResponse(int $statusCode, array $data): void
+function jsonResponse(int $status, array $payload): void
 {
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    http_response_code($status);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;
 }
 
-function normalizeText(string $value, string $default = 'inconnu'): string
+function ok(array $payload = [], int $status = 200): void
 {
-    $trimmed = trim($value);
-    return $trimmed === '' ? $default : $trimmed;
+    jsonResponse($status, ['success' => true] + $payload);
 }
 
-function normalizeUpperNoAccent(string $value, string $default = 'INCONNU'): string
+function fail(string $message, int $status = 400, array $extra = []): void
 {
-    $trimmed = trim($value);
-    if ($trimmed === '') {
-        return $default;
-    }
-
-    $withoutAccents = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $trimmed);
-    if ($withoutAccents === false || $withoutAccents === null) {
-        $withoutAccents = $trimmed;
-    }
-
-    $withoutAccents = preg_replace('/[^A-Za-z0-9\s\-\']/u', '', $withoutAccents) ?? $withoutAccents;
-    $collapsed = preg_replace('/\s+/', ' ', $withoutAccents) ?? $withoutAccents;
-    $upper = strtoupper(trim($collapsed));
-
-    return $upper === '' ? $default : $upper;
+    jsonResponse($status, ['success' => false, 'message' => $message] + $extra);
 }
 
-function parseBody(): array
+function requireMethod(string $method): void
 {
-    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== $method) {
+        fail('methode non autorisee', 405);
+    }
+}
 
-    if (strpos($contentType, 'application/json') !== false) {
-        $rawBody = file_get_contents('php://input');
-        $jsonData = json_decode($rawBody ?: '', true);
-        if (!is_array($jsonData)) {
-            sendJsonResponse(400, [
-                'success' => false,
-                'message' => 'json invalide',
-            ]);
+function body(): array
+{
+    if (str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) {
+        $data = json_decode(file_get_contents('php://input') ?: '', true);
+        if (!is_array($data)) {
+            fail('json invalide', 400);
         }
 
-        return $jsonData;
+        return $data;
     }
 
     return $_POST;
 }
 
-function requireString(array $data, string $field): string
+function text(array $data, string $key, string $default = ''): string
 {
-    if (!array_key_exists($field, $data)) {
-        sendJsonResponse(400, [
-            'success' => false,
-            'message' => "champ obligatoire: {$field}",
-        ]);
-    }
+    $value = trim((string) ($data[$key] ?? $default));
+    return $value === '' ? $default : $value;
+}
 
-    $value = trim((string) $data[$field]);
+function requiredText(array $data, string $key): string
+{
+    $value = text($data, $key);
     if ($value === '') {
-        sendJsonResponse(400, [
-            'success' => false,
-            'message' => "champ obligatoire: {$field}",
-        ]);
+        fail("champ obligatoire: {$key}", 400);
     }
 
     return $value;
 }
 
-function requireFloat(array $data, string $field): float
+function requiredFloat(array $data, string $key): float
 {
-    $value = requireString($data, $field);
-    $value = str_replace(',', '.', $value);
-
+    $value = str_replace(',', '.', requiredText($data, $key));
     if (!is_numeric($value)) {
-        sendJsonResponse(400, [
-            'success' => false,
-            'message' => "{$field} doit etre un nombre",
-        ]);
+        fail("{$key} doit etre un nombre", 400);
     }
 
     return (float) $value;
 }
 
-function toBoolInt(mixed $value): int
+function boolInt(mixed $value): int
 {
-    if (is_bool($value)) {
-        return $value ? 1 : 0;
-    }
-
-    $normalized = strtolower(trim((string) $value));
-    return in_array($normalized, ['1', 'true', 'oui', 'yes'], true) ? 1 : 0;
+    return in_array(strtolower(trim((string) $value)), ['1', 'true', 'oui', 'yes'], true) ? 1 : 0;
 }
 
-function firstColumnId(PDO $pdo, string $sql, array $params): ?int
+function fetchAll(PDO $pdo, string $sql, array $params = []): array
 {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $result = $stmt->fetchColumn();
-
-    if ($result === false) {
-        return null;
-    }
-
-    return (int) $result;
+    return $stmt->fetchAll();
 }
 
-function getOrCreateSimpleLabel(PDO $pdo, string $table, string $idColumn, string $label): int
+function fetchOne(PDO $pdo, string $sql, array $params = []): ?array
 {
-    $label = normalizeText($label);
+    $rows = fetchAll($pdo, $sql, $params);
+    return $rows[0] ?? null;
+}
 
-    $existingId = firstColumnId(
-        $pdo,
-        "SELECT {$idColumn} FROM {$table} WHERE libelle = :libelle LIMIT 1",
-        [':libelle' => $label]
-    );
+function labels(PDO $pdo, string $table, string $column = 'libelle'): array
+{
+    return array_column(fetchAll($pdo, "SELECT DISTINCT {$column} FROM {$table} ORDER BY {$column}"), $column);
+}
 
-    if ($existingId !== null) {
-        return $existingId;
+function normalizeLatinName(string $value): string
+{
+    $value = trim($value);
+    $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) ?: $value;
+    $ascii = preg_replace('/[^A-Za-z0-9\s\-\']/u', '', $ascii) ?? $ascii;
+    return strtoupper(trim(preg_replace('/\s+/', ' ', $ascii) ?? $ascii)) ?: 'INCONNU';
+}
+
+function getOrCreate(PDO $pdo, string $table, string $idColumn, array $data): int
+{
+    $where = implode(' AND ', array_map(static fn($key) => "{$key} = :{$key}", array_keys($data)));
+    $found = fetchOne($pdo, "SELECT {$idColumn} FROM {$table} WHERE {$where} LIMIT 1", $data);
+
+    if ($found) {
+        return (int) $found[$idColumn];
     }
 
-    $stmt = $pdo->prepare("INSERT INTO {$table} (libelle) VALUES (:libelle)");
-    $stmt->execute([':libelle' => $label]);
+    $columns = implode(', ', array_keys($data));
+    $params = ':' . implode(', :', array_keys($data));
+    $stmt = $pdo->prepare("INSERT INTO {$table} ({$columns}) VALUES ({$params})");
+    $stmt->execute($data);
 
     return (int) $pdo->lastInsertId();
 }
 
-function getOrCreateLocalisation(PDO $pdo, string $quartier, string $secteur, float $longitude, float $latitude): int
+function getLabelId(PDO $pdo, string $table, string $idColumn, string $label): int
 {
-    $existingId = firstColumnId(
-        $pdo,
-        'SELECT id_localisation FROM LOCALISATION WHERE quartier = :quartier AND secteur = :secteur AND longitude = :longitude AND latitude = :latitude LIMIT 1',
-        [
-            ':quartier' => normalizeText($quartier),
-            ':secteur' => normalizeText($secteur),
-            ':longitude' => $longitude,
-            ':latitude' => $latitude,
-        ]
-    );
-
-    if ($existingId !== null) {
-        return $existingId;
-    }
-
-    $stmt = $pdo->prepare(
-        'INSERT INTO LOCALISATION (quartier, secteur, longitude, latitude)
-         VALUES (:quartier, :secteur, :longitude, :latitude)'
-    );
-    $stmt->execute([
-        ':quartier' => normalizeText($quartier),
-        ':secteur' => normalizeText($secteur),
-        ':longitude' => $longitude,
-        ':latitude' => $latitude,
-    ]);
-
-    return (int) $pdo->lastInsertId();
+    return getOrCreate($pdo, $table, $idColumn, ['libelle' => $label ?: 'inconnu']);
 }
 
-function getOrCreateEspece(PDO $pdo, string $nomLatin, int $feuillageId): int
+function insertIgnore(PDO $pdo, string $sql, array $params): void
 {
-    $nomLatin = normalizeUpperNoAccent($nomLatin, 'INCONNU');
-
-    $existingId = firstColumnId(
-        $pdo,
-        'SELECT id_espece FROM ESPECE WHERE nom_latin = :nom_latin AND feuillage = :feuillage LIMIT 1',
-        [':nom_latin' => $nomLatin, ':feuillage' => $feuillageId]
-    );
-
-    if ($existingId !== null) {
-        return $existingId;
-    }
-
-    $stmt = $pdo->prepare(
-        'INSERT INTO ESPECE (nom_latin, feuillage) VALUES (:nom_latin, :feuillage)'
-    );
-    $stmt->execute([
-        ':nom_latin' => $nomLatin,
-        ':feuillage' => $feuillageId,
-    ]);
-
-    return (int) $pdo->lastInsertId();
-}
-
-function linkEspeceFeuillage(PDO $pdo, int $feuillageId, int $especeId): void
-{
-    $stmt = $pdo->prepare('INSERT INTO est_de_type (id_feuillage, id_espece) VALUES (:id_feuillage, :id_espece)');
-
     try {
-        $stmt->execute([
-            ':id_feuillage' => $feuillageId,
-            ':id_espece' => $especeId,
-        ]);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
     } catch (PDOException $e) {
         if ((string) $e->getCode() !== '23000') {
             throw $e;
@@ -216,18 +143,68 @@ function linkEspeceFeuillage(PDO $pdo, int $feuillageId, int $especeId): void
     }
 }
 
-function linkSituationArbre(PDO $pdo, int $situationId, int $arbreId): void
+function arbresSql(string $where = ''): string
 {
-    $stmt = $pdo->prepare('INSERT INTO possede (id_situation, id_arbre) VALUES (:id_situation, :id_arbre)');
+    return "
+        SELECT
+            ARBRE.id_arbre,
+            ESPECE.nom_latin AS espece,
+            FEUILLAGE.libelle AS type,
+            ARBRE.hauteur_totale,
+            ARBRE.hauteur_tronc,
+            ARBRE.diametre_tronc,
+            ARBRE.remarquable,
+            ARBRE.age_estime,
+            LOCALISATION.latitude,
+            LOCALISATION.longitude,
+            LOCALISATION.quartier,
+            LOCALISATION.secteur,
+            ETAT.libelle AS etat,
+            STADE_DEV.libelle AS stade_developpement,
+            PORT.libelle AS port,
+            PIED.libelle AS pied
+        FROM ARBRE
+        JOIN ESPECE ON ARBRE.id_espece = ESPECE.id_espece
+        JOIN FEUILLAGE ON ESPECE.feuillage = FEUILLAGE.id_feuillage
+        JOIN ETAT ON ARBRE.id_etat = ETAT.id_etat
+        JOIN STADE_DEV ON ARBRE.id_stad_dev = STADE_DEV.id_stad_dev
+        JOIN PORT ON ARBRE.id_port = PORT.id_port
+        JOIN PIED ON ARBRE.id_pied = PIED.id_pied
+        JOIN LOCALISATION ON ARBRE.id_localisation = LOCALISATION.id_localisation
+        {$where}
+    ";
+}
 
-    try {
-        $stmt->execute([
-            ':id_situation' => $situationId,
-            ':id_arbre' => $arbreId,
-        ]);
-    } catch (PDOException $e) {
-        if ((string) $e->getCode() !== '23000') {
-            throw $e;
+function pythonJson(string $folder, string $script, array $args = []): array
+{
+    $path = realpath(__DIR__ . "/../pythonIA/{$folder}");
+    if (!$path) {
+        fail("dossier python introuvable: {$folder}", 500);
+    }
+
+    $arguments = escapeshellarg($script);
+    foreach ($args as $arg) {
+        $arguments .= ' ' . escapeshellarg((string) $arg);
+    }
+
+    $pythonBin = getenv('PYTHON_BIN');
+    $commands = $pythonBin ? [escapeshellarg($pythonBin), 'python', 'py -3', 'python3'] : ['python', 'py -3', 'python3'];
+
+    $lastOutput = '';
+    foreach ($commands as $python) {
+        $command = 'cd ' . escapeshellarg($path) . " && {$python} {$arguments} 2>&1";
+        $output = shell_exec($command) ?? '';
+        $lastOutput = $output;
+
+        foreach (array_reverse(array_filter(array_map('trim', explode("\n", $output)))) as $line) {
+            if (str_starts_with($line, '{')) {
+                $json = json_decode($line, true);
+                if (is_array($json)) {
+                    return $json + ['output' => $output];
+                }
+            }
         }
     }
+
+    return ['success' => false, 'error' => 'sortie python invalide', 'output' => $lastOutput];
 }

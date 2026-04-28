@@ -10,61 +10,6 @@ let selectedTreeId = null;
 const deletingTreeIds = new Set();
 const MAX_MAP_POINTS = 8000;
 
-function getApiCandidates(endpoint) {
-  const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
-
-  if (window.location.protocol === 'file:') {
-    return [
-      `http://localhost:8000/api/${normalizedEndpoint}`,
-      `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
-      `http://localhost:8080/api/${normalizedEndpoint}`,
-      `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
-    ];
-  }
-
-  return [
-    `../backend/api/${normalizedEndpoint}`,
-    `../api/${normalizedEndpoint}`,
-    `/backend/api/${normalizedEndpoint}`,
-    `/api/${normalizedEndpoint}`,
-    `${window.location.origin}/api/${normalizedEndpoint}`,
-  ];
-}
-
-async function fetchApiJson(endpoint, init = {}) {
-  let lastError = null;
-
-  for (const url of getApiCandidates(endpoint)) {
-    try {
-      const response = await fetch(url, init);
-      if (response.status === 404) {
-        continue;
-      }
-
-      const payload = await response.json();
-      return { response, payload };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw lastError || new Error('API introuvable');
-}
-
-function safeNumber(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
 function isValidWgs84(lat, lon) {
   return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
@@ -305,13 +250,9 @@ async function deleteTree(idArbre) {
   applyFilters();
 
   try {
-    const { response, payload } = await fetchApiJson(`arbres.php?id_arbre=${encodeURIComponent(idArbre)}`, {
+    await api(`arbres.php?id_arbre=${encodeURIComponent(idArbre)}`, {
       method: 'DELETE',
     });
-
-    if (!response.ok || !payload.success) {
-      throw new Error(payload.message || 'Erreur suppression arbre');
-    }
 
     allRows = allRows.filter((row) => Number(row.id_arbre) !== Number(idArbre));
     fillEtatFilter(allRows);
@@ -364,11 +305,7 @@ async function loadArbres() {
   if (mapStatus) mapStatus.textContent = 'Chargement des donnees...';
 
   try {
-    const { response, payload } = await fetchApiJson('arbres.php');
-
-    if (!response.ok || !payload.success) {
-      throw new Error(payload.message || 'Erreur API arbres');
-    }
+    const payload = await api('arbres.php');
 
     allRows = Array.isArray(payload.data) ? payload.data : [];
     fillEtatFilter(allRows);

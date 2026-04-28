@@ -7,7 +7,6 @@ function isValidWgs84(lat, lon) {
     return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
-// Projection RGF93 / CC49 vers WGS84
 function lambertCc49ToWgs84(x, y) {
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
         return null;
@@ -98,58 +97,9 @@ const clusterNames = {
 };
 
 // Récupérer les prédictions de clusters
-function getApiCandidates(endpoint) {
-    const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
-
-    if (window.location.protocol === 'file:') {
-        return [
-            `http://localhost:8000/api/${normalizedEndpoint}`,
-            `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
-            `http://localhost:8080/api/${normalizedEndpoint}`,
-            `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
-        ];
-    }
-
-    return [
-        `../backend/api/${normalizedEndpoint}`,
-        `../api/${normalizedEndpoint}`,
-        `/backend/api/${normalizedEndpoint}`,
-        `/api/${normalizedEndpoint}`,
-        `${window.location.origin}/api/${normalizedEndpoint}`,
-    ];
-}
-
-async function fetchApiJson(endpoint, init = {}) {
-    let lastError = null;
-
-    for (const url of getApiCandidates(endpoint)) {
-        try {
-            const response = await fetch(url, init);
-            if (response.status === 404) {
-                continue;
-            }
-
-            const payload = await response.json();
-            return { response, payload };
-        } catch (error) {
-            lastError = error;
-        }
-    }
-
-    throw lastError || new Error('API introuvable');
-}
-
-function safeNumber(value, fallback = 0) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-}
-
 async function loadClusterPredictions() {
     try {
-        const { response, payload: result } = await fetchApiJson('predict_clusters.php');
-        if (!response.ok) throw new Error('API error: ' + response.status);
-
-        if (!result.success) throw new Error(result.message || 'Erreur de prédiction');
+        const result = await api('predict_clusters.php');
         
         return result.data || [];
     } catch (error) {

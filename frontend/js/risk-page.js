@@ -6,54 +6,9 @@
 let allTrees = [];
 
 // Récupérer les arbres
-function getApiCandidates(endpoint) {
-    const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
-
-    if (window.location.protocol === 'file:') {
-        return [
-            `http://localhost:8000/api/${normalizedEndpoint}`,
-            `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
-            `http://localhost:8080/api/${normalizedEndpoint}`,
-            `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
-        ];
-    }
-
-    return [
-        `../backend/api/${normalizedEndpoint}`,
-        `../api/${normalizedEndpoint}`,
-        `/backend/api/${normalizedEndpoint}`,
-        `/api/${normalizedEndpoint}`,
-        `${window.location.origin}/api/${normalizedEndpoint}`,
-    ];
-}
-
-async function fetchApiJson(endpoint, init = {}) {
-    let lastError = null;
-
-    for (const url of getApiCandidates(endpoint)) {
-        try {
-            const response = await fetch(url, init);
-            if (response.status === 404) {
-                continue;
-            }
-
-            const payload = await response.json();
-            return { response, payload };
-        } catch (error) {
-            lastError = error;
-        }
-    }
-
-    throw lastError || new Error('API introuvable');
-}
-
 async function loadTrees() {
     try {
-        const { response, payload: result } = await fetchApiJson('arbres.php');
-        if (!response.ok) throw new Error('API error: ' + response.status);
-
-        if (!result.success) throw new Error(result.message || 'Erreur chargement arbres');
-        
+        const result = await api('arbres.php');
         allTrees = result.data || [];
         populateTreeSelect();
     } catch (error) {
@@ -95,24 +50,18 @@ async function predictTree() {
         if (!tree) throw new Error('Arbre non trouvé');
 
         // Appeler predict_age.php
-        const { response: ageResponse, payload: ageResult } = await fetchApiJson('predict_age.php', {
+        const ageResult = await api('predict_age.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_arbre })
         });
-        if (!ageResponse.ok || !ageResult.success) {
-            throw new Error(ageResult.message || 'Erreur prediction age');
-        }
 
         // Appeler predict_risque.php
-        const { response: risqueResponse, payload: risqueResult } = await fetchApiJson('predict_risque.php', {
+        const risqueResult = await api('predict_risque.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_arbre })
         });
-        if (!risqueResponse.ok || !risqueResult.success) {
-            throw new Error(risqueResult.message || 'Erreur prediction risque');
-        }
 
         // Afficher les résultats
         displayResults(tree, ageResult, risqueResult);

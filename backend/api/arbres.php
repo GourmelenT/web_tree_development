@@ -6,232 +6,118 @@ require_once __DIR__ . '/common.php';
 
 function listArbres(PDO $pdo): void
 {
-    $stmt = $pdo->query(
-        'SELECT
-            ARBRE.id_arbre,
-            ESPECE.nom_latin AS espece,
-            FEUILLAGE.libelle AS type,
-            ARBRE.hauteur_totale,
-            ARBRE.hauteur_tronc,
-            ARBRE.diametre_tronc,
-            ARBRE.remarquable,
-            LOCALISATION.latitude,
-            LOCALISATION.longitude,
-            LOCALISATION.quartier,
-            LOCALISATION.secteur,
-            ETAT.libelle AS etat,
-            STADE_DEV.libelle AS stade_developpement,
-            PORT.libelle AS port,
-            PIED.libelle AS pied,
-            ARBRE.age_estime
-        FROM ARBRE
-        INNER JOIN ESPECE ON ARBRE.id_espece = ESPECE.id_espece
-        INNER JOIN FEUILLAGE ON ESPECE.feuillage = FEUILLAGE.id_feuillage
-        INNER JOIN ETAT ON ARBRE.id_etat = ETAT.id_etat
-        INNER JOIN STADE_DEV ON ARBRE.id_stad_dev = STADE_DEV.id_stad_dev
-        INNER JOIN PORT ON ARBRE.id_port = PORT.id_port
-        INNER JOIN PIED ON ARBRE.id_pied = PIED.id_pied
-        INNER JOIN LOCALISATION ON ARBRE.id_localisation = LOCALISATION.id_localisation
-        ORDER BY ARBRE.id_arbre ASC'
-    );
-
-    $rows = $stmt->fetchAll();
-
-    sendJsonResponse(200, [
-        'success' => true,
-        'count' => count($rows),
-        'data' => $rows,
-    ]);
+    $rows = fetchAll($pdo, arbresSql('ORDER BY ARBRE.id_arbre ASC'));
+    ok(['count' => count($rows), 'data' => $rows]);
 }
 
 function createArbre(PDO $pdo): void
 {
-    $data = parseBody();
+    $data = body();
+    $today = date('Y-m-d');
 
-    $espece = requireString($data, 'espece');
-    $hauteurTotale = requireFloat($data, 'hauteur_totale');
-    $hauteurTronc = requireFloat($data, 'hauteur_tronc');
-    $diametreTronc = requireFloat($data, 'diametre_tronc');
-    $latitude = requireFloat($data, 'latitude');
-    $longitude = requireFloat($data, 'longitude');
-
-    $remarquable = toBoolInt($data['remarquable'] ?? 0);
-    $type = normalizeText((string) ($data['type'] ?? 'inconnu'));
-    $etat = normalizeText((string) ($data['etat'] ?? 'EN PLACE'));
-    $stadeDev = normalizeText((string) ($data['stade_developpement'] ?? 'inconnu'));
-    $port = normalizeText((string) ($data['port'] ?? 'inconnu'));
-    $pied = normalizeText((string) ($data['pied'] ?? 'inconnu'));
-    $quartier = normalizeText((string) ($data['quartier'] ?? 'inconnu'));
-    $secteur = normalizeText((string) ($data['secteur'] ?? 'inconnu'));
-    $situation = normalizeText((string) ($data['situation'] ?? 'Alignement'));
-    $ageEstime = max(0, (int) ($data['age_estime'] ?? 0));
-
-    $dateEdited = date('Y-m-d');
-    $datePlantation = normalizeText((string) ($data['date_plantation'] ?? ''), $dateEdited);
-
+    $ids = [];
     $pdo->beginTransaction();
 
     try {
-        $feuillageId = getOrCreateSimpleLabel($pdo, 'FEUILLAGE', 'id_feuillage', $type);
-        $especeId = getOrCreateEspece($pdo, $espece, $feuillageId);
+        $ids['feuillage'] = getLabelId($pdo, 'FEUILLAGE', 'id_feuillage', text($data, 'type', 'inconnu'));
+        $ids['espece'] = getOrCreate($pdo, 'ESPECE', 'id_espece', [
+            'nom_latin' => normalizeLatinName(requiredText($data, 'espece')),
+            'feuillage' => $ids['feuillage'],
+        ]);
+        $ids['etat'] = getLabelId($pdo, 'ETAT', 'id_etat', text($data, 'etat', 'EN PLACE'));
+        $ids['stade'] = getLabelId($pdo, 'STADE_DEV', 'id_stad_dev', text($data, 'stade_developpement', 'inconnu'));
+        $ids['port'] = getLabelId($pdo, 'PORT', 'id_port', text($data, 'port', 'inconnu'));
+        $ids['pied'] = getLabelId($pdo, 'PIED', 'id_pied', text($data, 'pied', 'inconnu'));
+        $ids['situation'] = getLabelId($pdo, 'SITUATION', 'id_situation', text($data, 'situation', 'Alignement'));
+        $ids['localisation'] = getOrCreate($pdo, 'LOCALISATION', 'id_localisation', [
+            'quartier' => text($data, 'quartier', 'inconnu'),
+            'secteur' => text($data, 'secteur', 'inconnu'),
+            'longitude' => requiredFloat($data, 'longitude'),
+            'latitude' => requiredFloat($data, 'latitude'),
+        ]);
 
-        $etatId = getOrCreateSimpleLabel($pdo, 'ETAT', 'id_etat', $etat);
-        $stadeDevId = getOrCreateSimpleLabel($pdo, 'STADE_DEV', 'id_stad_dev', $stadeDev);
-        $portId = getOrCreateSimpleLabel($pdo, 'PORT', 'id_port', $port);
-        $piedId = getOrCreateSimpleLabel($pdo, 'PIED', 'id_pied', $pied);
-        $situationId = getOrCreateSimpleLabel($pdo, 'SITUATION', 'id_situation', $situation);
-        $localisationId = getOrCreateLocalisation($pdo, $quartier, $secteur, $longitude, $latitude);
-
-        linkEspeceFeuillage($pdo, $feuillageId, $especeId);
+        insertIgnore(
+            $pdo,
+            'INSERT INTO est_de_type (id_feuillage, id_espece) VALUES (:feuillage, :espece)',
+            [':feuillage' => $ids['feuillage'], ':espece' => $ids['espece']]
+        );
 
         $stmt = $pdo->prepare(
             'INSERT INTO ARBRE (
-                hauteur_tronc,
-                hauteur_totale,
-                diametre_tronc,
-                remarquable,
-                date_plantation,
-                age_estime,
-                cluster_prediction,
-                date_edited,
-                id_espece,
-                id_etat,
-                id_stad_dev,
-                id_port,
-                id_pied,
-                id_localisation
+                hauteur_tronc, hauteur_totale, diametre_tronc, remarquable,
+                date_plantation, age_estime, cluster_prediction, date_edited,
+                id_espece, id_etat, id_stad_dev, id_port, id_pied, id_localisation
             ) VALUES (
-                :hauteur_tronc,
-                :hauteur_totale,
-                :diametre_tronc,
-                :remarquable,
-                :date_plantation,
-                :age_estime,
-                :cluster_prediction,
-                :date_edited,
-                :id_espece,
-                :id_etat,
-                :id_stad_dev,
-                :id_port,
-                :id_pied,
-                :id_localisation
+                :hauteur_tronc, :hauteur_totale, :diametre_tronc, :remarquable,
+                :date_plantation, :age_estime, 0, :date_edited,
+                :id_espece, :id_etat, :id_stad_dev, :id_port, :id_pied, :id_localisation
             )'
         );
-
         $stmt->execute([
-            ':hauteur_tronc' => $hauteurTronc,
-            ':hauteur_totale' => $hauteurTotale,
-            ':diametre_tronc' => $diametreTronc,
-            ':remarquable' => $remarquable,
-            ':date_plantation' => $datePlantation,
-            ':age_estime' => $ageEstime,
-            ':cluster_prediction' => 0,
-            ':date_edited' => $dateEdited,
-            ':id_espece' => $especeId,
-            ':id_etat' => $etatId,
-            ':id_stad_dev' => $stadeDevId,
-            ':id_port' => $portId,
-            ':id_pied' => $piedId,
-            ':id_localisation' => $localisationId,
+            ':hauteur_tronc' => requiredFloat($data, 'hauteur_tronc'),
+            ':hauteur_totale' => requiredFloat($data, 'hauteur_totale'),
+            ':diametre_tronc' => requiredFloat($data, 'diametre_tronc'),
+            ':remarquable' => boolInt($data['remarquable'] ?? 0),
+            ':date_plantation' => text($data, 'date_plantation', $today),
+            ':age_estime' => max(0, (int) ($data['age_estime'] ?? 0)),
+            ':date_edited' => $today,
+            ':id_espece' => $ids['espece'],
+            ':id_etat' => $ids['etat'],
+            ':id_stad_dev' => $ids['stade'],
+            ':id_port' => $ids['port'],
+            ':id_pied' => $ids['pied'],
+            ':id_localisation' => $ids['localisation'],
         ]);
 
         $arbreId = (int) $pdo->lastInsertId();
-        linkSituationArbre($pdo, $situationId, $arbreId);
+        insertIgnore(
+            $pdo,
+            'INSERT INTO possede (id_situation, id_arbre) VALUES (:situation, :arbre)',
+            [':situation' => $ids['situation'], ':arbre' => $arbreId]
+        );
 
         $pdo->commit();
-
-        sendJsonResponse(201, [
-            'success' => true,
-            'message' => 'arbre ajoute avec succes',
-            'id_arbre' => $arbreId,
-        ]);
+        ok(['message' => 'arbre ajoute avec succes', 'id_arbre' => $arbreId], 201);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-
-        sendJsonResponse(500, [
-            'success' => false,
-            'message' => 'erreur ajout arbre',
-            'error' => $e->getMessage(),
-        ]);
+        fail('erreur ajout arbre', 500, ['error' => $e->getMessage()]);
     }
 }
 
 function deleteArbre(PDO $pdo): void
 {
-    $idArbre = (int) ($_GET['id_arbre'] ?? 0);
-
-    if ($idArbre <= 0) {
-        sendJsonResponse(400, [
-            'success' => false,
-            'message' => 'id_arbre invalide',
-        ]);
+    $id = (int) ($_GET['id_arbre'] ?? 0);
+    if ($id <= 0) {
+        fail('id_arbre invalide', 400);
+    }
+    if (!fetchOne($pdo, 'SELECT id_arbre FROM ARBRE WHERE id_arbre = :id', [':id' => $id])) {
+        fail('arbre non trouve', 404);
     }
 
-    $pdo->beginTransaction();
+    $pdo->prepare('DELETE FROM possede WHERE id_arbre = :id')->execute([':id' => $id]);
+    $pdo->prepare('DELETE FROM ARBRE WHERE id_arbre = :id')->execute([':id' => $id]);
 
-    try {
-        $existsStmt = $pdo->prepare('SELECT id_arbre FROM ARBRE WHERE id_arbre = :id_arbre LIMIT 1');
-        $existsStmt->execute([':id_arbre' => $idArbre]);
-
-        if ($existsStmt->fetchColumn() === false) {
-            $pdo->rollBack();
-            sendJsonResponse(404, [
-                'success' => false,
-                'message' => 'arbre non trouve',
-            ]);
-        }
-
-        $linkStmt = $pdo->prepare('DELETE FROM possede WHERE id_arbre = :id_arbre');
-        $linkStmt->execute([':id_arbre' => $idArbre]);
-
-        $treeStmt = $pdo->prepare('DELETE FROM ARBRE WHERE id_arbre = :id_arbre');
-        $treeStmt->execute([':id_arbre' => $idArbre]);
-
-        $pdo->commit();
-
-        sendJsonResponse(200, [
-            'success' => true,
-            'message' => 'arbre supprime avec succes',
-            'id_arbre' => $idArbre,
-        ]);
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-
-        sendJsonResponse(500, [
-            'success' => false,
-            'message' => 'erreur suppression arbre',
-            'error' => $e->getMessage(),
-        ]);
-    }
+    ok(['message' => 'arbre supprime avec succes', 'id_arbre' => $id]);
 }
 
 try {
     $pdo = getConnection();
 
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        listArbres($pdo);
+    switch ($_SERVER['REQUEST_METHOD'] ?? 'GET') {
+        case 'GET':
+            listArbres($pdo);
+            break;
+        case 'POST':
+            createArbre($pdo);
+            break;
+        case 'DELETE':
+            deleteArbre($pdo);
+            break;
+        default:
+            fail('methode non autorisee', 405);
     }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        createArbre($pdo);
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-        deleteArbre($pdo);
-    }
-
-    sendJsonResponse(405, [
-        'success' => false,
-        'message' => 'methode non autorisee',
-    ]);
 } catch (Throwable $e) {
-    sendJsonResponse(500, [
-        'success' => false,
-        'message' => 'erreur api arbres',
-        'error' => $e->getMessage(),
-    ]);
+    fail('erreur api arbres', 500, ['error' => $e->getMessage()]);
 }

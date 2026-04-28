@@ -16,47 +16,6 @@ let speciesCatalog = [];
 const LONGITUDE_RANGE = { min: 1720320.1079, max: 1721757 };
 const LATITUDE_RANGE = { min: 8294619, max: 8295873 };
 
-function getApiCandidates(endpoint) {
-  const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
-
-  if (window.location.protocol === 'file:') {
-    return [
-      `http://localhost:8000/api/${normalizedEndpoint}`,
-      `http://127.0.0.1:8000/api/${normalizedEndpoint}`,
-      `http://localhost:8080/api/${normalizedEndpoint}`,
-      `http://127.0.0.1:8080/api/${normalizedEndpoint}`,
-    ];
-  }
-
-  return [
-    `../backend/api/${normalizedEndpoint}`,
-    `../api/${normalizedEndpoint}`,
-    `/backend/api/${normalizedEndpoint}`,
-    `/api/${normalizedEndpoint}`,
-    `${window.location.origin}/api/${normalizedEndpoint}`,
-  ];
-}
-
-async function fetchApiJson(endpoint, init = {}) {
-  let lastError = null;
-
-  for (const url of getApiCandidates(endpoint)) {
-    try {
-      const response = await fetch(url, init);
-      if (response.status === 404) {
-        continue;
-      }
-
-      const payload = await response.json();
-      return { response, payload };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw lastError || new Error('api introuvable');
-}
-
 function showFeedback(message, ok = true) {
   if (!feedback) return;
   feedback.textContent = message;
@@ -290,9 +249,7 @@ function fillSpeciesDatalist(values) {
 
 async function loadOptions() {
   try {
-    const { response, payload } = await fetchApiJson('options.php');
-    if (!response.ok) throw new Error('api options indisponible');
-    if (!payload.success) throw new Error('api options indisponible');
+    const payload = await api('options.php');
 
     fillSpeciesDatalist(payload.data.especes);
     fillSelect('type', payload.data.types);
@@ -360,15 +317,11 @@ if (form) {
     };
 
     try {
-      const { response, payload: result } = await fetchApiJson('arbres.php', {
+      const result = await api('arbres.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'erreur serveur');
-      }
 
       showFeedback(`arbre ajoute avec succes (id ${result.id_arbre})`, true);
       form.reset();

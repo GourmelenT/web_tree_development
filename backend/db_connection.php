@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-// Simple PDO connection helper. Loads .env (if present) and returns a PDO instance.
 function loadEnv(string $file = __DIR__ . '/.env'): void
 {
     if (!is_file($file)) {
@@ -14,38 +13,72 @@ function loadEnv(string $file = __DIR__ . '/.env'): void
         if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
             continue;
         }
+
         [$key, $value] = array_map('trim', explode('=', $line, 2));
         $value = trim($value, "\"'");
+
         putenv("{$key}={$value}");
         $_ENV[$key] = $value;
     }
+}
 
-function getConnection(): PDO
+function envValue(string $key, string $default = ''): string
+{
+    $value = getenv($key);
+    return $value === false ? $default : $value;
+}
+
+function dbConfig(): array
 {
     loadEnv();
 
-    $host = getenv('DB_HOST') ?: '127.0.0.1';
-    $port = getenv('DB_PORT') ?: '3306';
-    $name = getenv('DB_NAME') ?: 'grp1tr3';
-    $user = getenv('DB_USER') ?: 'root';
-    $password = getenv('DB_PASSWORD') ?: '';
+    $host = rtrim(envValue('DB_HOST', '127.0.0.1'), '/');
+    if (str_contains($host, '://')) {
+        $host = parse_url($host, PHP_URL_HOST) ?: '127.0.0.1';
+    }
 
-    $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $name);
+    return [
+        'host' => $host,
+        'port' => envValue('DB_PORT', '3306'),
+        'name' => envValue('DB_NAME', 'grp1tr3'),
+        'user' => envValue('DB_USER', 'root'),
+        'password' => envValue('DB_PASSWORD'),
+    ];
+}
 
-    $options = [
+function pdo(string $dsn, array $config): PDO
+{
+    return new PDO($dsn, $config['user'], $config['password'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
-    ];
+    ]);
+}
+
+function getConnection(): PDO
+{
+    $config = dbConfig();
+    $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['name']};charset=utf8mb4";
 
     try {
-        return new PDO($dsn, $user, $password, $options);
+        return pdo($dsn, $config);
     } catch (PDOException $e) {
         throw new RuntimeException('Erreur de connexion MySQL: ' . $e->getMessage(), 0, $e);
     }
 }
 
-// When run from CLI for quick check
+function getServerConnection(): PDO
+{
+    $config = dbConfig();
+    $dsn = "mysql:host={$config['host']};port={$config['port']};charset=utf8mb4";
+
+    try {
+        return pdo($dsn, $config);
+    } catch (PDOException $e) {
+        throw new RuntimeException('Erreur de connexion MySQL: ' . $e->getMessage(), 0, $e);
+    }
+}
+
 if (PHP_SAPI === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     try {
         getConnection();
@@ -54,5 +87,4 @@ if (PHP_SAPI === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILEN
         echo $e->getMessage() . PHP_EOL;
         exit(1);
     }
-}
 }

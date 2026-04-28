@@ -35,8 +35,8 @@ function runSchema(PDO $pdo, string $schemaPath): void
 
 function ensureDatabaseExists(): bool
 {
-    $config = getDbConfig();
-    $dbName = (string) ($config['db_name'] ?? '');
+    $config = dbConfig();
+    $dbName = (string) ($config['name'] ?? '');
     if ($dbName === '') {
         throw new RuntimeException('nom de base de donnees manquant');
     }

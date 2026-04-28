@@ -40,7 +40,7 @@ function requireMethod(string $method): void
 
 function body(): array
 {
-    if (str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) {
+    if (strpos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
         $data = json_decode(file_get_contents('php://input') ?: '', true);
         if (!is_array($data)) {
             fail('json invalide', 400);
@@ -78,7 +78,7 @@ function requiredFloat(array $data, string $key): float
     return (float) $value;
 }
 
-function boolInt(mixed $value): int
+function boolInt($value): int
 {
     return in_array(strtolower(trim((string) $value)), ['1', 'true', 'oui', 'yes'], true) ? 1 : 0;
 }
@@ -111,7 +111,7 @@ function normalizeLatinName(string $value): string
 
 function getOrCreate(PDO $pdo, string $table, string $idColumn, array $data): int
 {
-    $where = implode(' AND ', array_map(static fn($key) => "{$key} = :{$key}", array_keys($data)));
+    $where = implode(' AND ', array_map(static function ($key) { return "{$key} = :{$key}"; }, array_keys($data)));
     $found = fetchOne($pdo, "SELECT {$idColumn} FROM {$table} WHERE {$where} LIMIT 1", $data);
 
     if ($found) {
@@ -197,7 +197,7 @@ function pythonJson(string $folder, string $script, array $args = []): array
         $lastOutput = $output;
 
         foreach (array_reverse(array_filter(array_map('trim', explode("\n", $output)))) as $line) {
-            if (str_starts_with($line, '{')) {
+            if (strpos($line, '{') === 0) {
                 $json = json_decode($line, true);
                 if (is_array($json)) {
                     return $json + ['output' => $output];

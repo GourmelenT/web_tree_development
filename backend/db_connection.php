@@ -10,7 +10,7 @@ function loadEnv(string $file = __DIR__ . '/.env'): void
 
     foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
         $line = trim($line);
-        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
             continue;
         }
 
@@ -33,7 +33,7 @@ function dbConfig(): array
     loadEnv();
 
     $host = rtrim(envValue('DB_HOST', '127.0.0.1'), '/');
-    if (str_contains($host, '://')) {
+    if (strpos($host, '://') !== false) {
         $host = parse_url($host, PHP_URL_HOST) ?: '127.0.0.1';
     }
 

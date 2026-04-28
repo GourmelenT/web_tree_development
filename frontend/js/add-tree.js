@@ -13,6 +13,8 @@ const speciesSuggestions = document.getElementById('species-suggestions');
 let currentStep = 1;
 const MAX_STEP = 4;
 let speciesCatalog = [];
+const LONGITUDE_RANGE = { min: 1720320.1079, max: 1721757 };
+const LATITUDE_RANGE = { min: 8294619, max: 8295873 };
 
 function getApiCandidates(endpoint) {
   const normalizedEndpoint = String(endpoint || '').replace(/^\/+/, '');
@@ -203,6 +205,25 @@ function validateStep(step) {
       const label = section.querySelector(`label[for="${field.id}"]`)?.textContent || field.id || 'champ';
       showFeedback(`Veuillez renseigner: ${label}.`, false);
       field.focus();
+      return false;
+    }
+  }
+
+  if (step === 3) {
+    const longitudeField = document.getElementById('longitude');
+    const latitudeField = document.getElementById('latitude');
+    const longitudeValue = Number(longitudeField?.value);
+    const latitudeValue = Number(latitudeField?.value);
+
+    if (Number.isNaN(longitudeValue) || longitudeValue < LONGITUDE_RANGE.min || longitudeValue > LONGITUDE_RANGE.max) {
+      showFeedback(`Longitude invalide: valeur attendue entre ${LONGITUDE_RANGE.min} et ${LONGITUDE_RANGE.max}.`, false);
+      longitudeField?.focus();
+      return false;
+    }
+
+    if (Number.isNaN(latitudeValue) || latitudeValue < LATITUDE_RANGE.min || latitudeValue > LATITUDE_RANGE.max) {
+      showFeedback(`Latitude invalide: valeur attendue entre ${LATITUDE_RANGE.min} et ${LATITUDE_RANGE.max}.`, false);
+      latitudeField?.focus();
       return false;
     }
   }

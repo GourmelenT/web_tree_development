@@ -33,19 +33,48 @@ function runSchema(PDO $pdo, string $schemaPath): void
     }
 }
 
-function createDatabaseAndTables(): void
+function ensureDatabaseExists(): bool
 {
-    // en mysql distant, on part d'une base deja creee (ex: phpmyadmin hebergeur)
+    $config = getDbConfig();
+    $dbName = (string) ($config['db_name'] ?? '');
+    if ($dbName === '') {
+        throw new RuntimeException('nom de base de donnees manquant');
+    }
+
+    $serverPdo = getServerConnection();
+    $stmt = $serverPdo->prepare('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :db_name LIMIT 1');
+    $stmt->execute([':db_name' => $dbName]);
+    $exists = $stmt->fetchColumn() !== false;
+
+    if ($exists) {
+        return false;
+    }
+
+    $quotedDbName = '`' . str_replace('`', '``', $dbName) . '`';
+    $serverPdo->exec("CREATE DATABASE {$quotedDbName} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+    return true;
+}
+
+function createDatabaseAndTables(): array
+{
+    $created = ensureDatabaseExists();
     $pdo = getConnection();
 
     runSchema($pdo, __DIR__ . '/create_table.sql');
 
-    echo "tables mysql creees avec succes." . PHP_EOL;
+    return [
+        'database_created' => $created,
+        'message' => $created
+            ? 'base de donnees creee puis tables initialisees avec succes.'
+            : 'base deja existante, tables verifiees/initialisees avec succes.',
+    ];
 }
 
 if (PHP_SAPI === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     try {
-        createDatabaseAndTables();
+        $result = createDatabaseAndTables();
+        echo $result['message'] . PHP_EOL;
     } catch (Throwable $e) {
         echo 'erreur creation base/tables: ' . $e->getMessage() . PHP_EOL;
         exit(1);

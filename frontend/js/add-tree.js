@@ -5,6 +5,7 @@ const stepPills = Array.from(document.querySelectorAll('[data-step-pill]'));
 const prevStepBtn = document.getElementById('btn-prev-step');
 const nextStepBtn = document.getElementById('btn-next-step');
 const submitBtn = document.getElementById('btn-submit-form');
+const insertRandomBtn = document.getElementById('btn-insert-random');
 const reviewBox = document.getElementById('form-review');
 const speciesInput = document.getElementById('species');
 const speciesList = document.getElementById('species-list');
@@ -285,6 +286,30 @@ if (form) {
     if (currentStep < MAX_STEP) {
       currentStep += 1;
       renderStep();
+    }
+  });
+
+  insertRandomBtn?.addEventListener('click', async () => {
+    insertRandomBtn.disabled = true;
+    showFeedback('Insertion de 5 arbres aleatoires en cours...', true);
+
+    try {
+      const { response, payload } = await fetchApiJson('insert_random.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: 5 }),
+      });
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || 'erreur serveur');
+      }
+
+      showFeedback(payload.message || '5 arbres aleatoires inseres.', true);
+      await loadOptions();
+    } catch (error) {
+      showFeedback(`echec insertion aleatoire: ${error.message}`, false);
+    } finally {
+      insertRandomBtn.disabled = false;
     }
   });
 

@@ -2,6 +2,8 @@ const totalEl = document.getElementById('kpi-total');
 const remarkableEl = document.getElementById('kpi-remarkables');
 const statesEl = document.getElementById('kpi-states');
 const heightEl = document.getElementById('kpi-height');
+const setupDbBtn = document.getElementById('btn-setup-db');
+const setupFeedback = document.getElementById('home-setup-feedback');
 
 async function loadHomeStats() {
   try {
@@ -25,5 +27,39 @@ async function loadHomeStats() {
     if (heightEl) heightEl.textContent = 'n/a';
   }
 }
+
+function showSetupFeedback(message, ok = true) {
+  if (!setupFeedback) return;
+  setupFeedback.textContent = message;
+  setupFeedback.style.color = ok ? 'var(--ok)' : 'var(--danger)';
+}
+
+async function setupDatabaseFromHome() {
+  if (!setupDbBtn) return;
+
+  setupDbBtn.disabled = true;
+  showSetupFeedback('Initialisation de la base en cours...', true);
+
+  try {
+    const { response, payload } = await fetchApiJson('setup_database.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trigger: 'home' }),
+    });
+
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || 'erreur serveur');
+    }
+
+    showSetupFeedback(payload.message || 'Base initialisee avec succes.', true);
+    await loadHomeStats();
+  } catch (error) {
+    showSetupFeedback(`Echec initialisation: ${error.message}`, false);
+  } finally {
+    setupDbBtn.disabled = false;
+  }
+}
+
+setupDbBtn?.addEventListener('click', setupDatabaseFromHome);
 
 loadHomeStats();
